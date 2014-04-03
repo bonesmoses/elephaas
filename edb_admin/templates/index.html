@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}EDB Management Utilities{% endblock title %}
+{% block content %}
+<p>Welcome to the EDB Management Utility page. This page lists tasks which can be performed by EDB users. Please observe the list below.</p>
+<hr />
+
+<ul>
+  <li><a href="{% url 'db_user:index' %}">Change your EDB password</a></li>
+</ul>
+
+<hr />
+{% endblock content %}

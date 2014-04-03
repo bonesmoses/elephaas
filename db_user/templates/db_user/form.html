@@ -1,0 +1,22 @@
+<p>Passwords must obey the following stipulations:</p>
+
+<ul>
+    <li>Must be at least eight (8) characters in length.</li>
+    <li>Must contain at least one lowercase letter.</li>
+    <li>Must contain at least one uppercase letter.</li>
+    <li>Must contain at least one number.</li>
+    <li>Must contain at least one symbol.</li>
+</ul>
+
+<form action="{% url 'db_user:index' %}" method="post">
+{% csrf_token %}
+{{ form.non_field_errors }}
+<table class="form">
+{{ form }}
+<tr>
+    <th>&nbsp;</th>
+    <td><input class="submit" type="submit" value="Change Password" /></td>
+</tr>
+</table>
+<br />
+</form>

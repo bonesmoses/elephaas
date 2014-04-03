@@ -1,0 +1,11 @@
+body { font: 12pt "Bitstream Charter", serif; }
+.container { width: 800px; margin: 0 auto }
+.header { border-bottom: solid 2px #000; }
+.header h1 { width: 780px; position: absolute; top: -5px; text-align: right; color: #AAA; font-size: 20pt; font-style: italic; }
+.content table { width: 100%; position: relative; }
+.content table ul { position: absolute; left: 160pt; top: -10pt; padding: 0; }
+.content td input { width: 130pt }
+.content th { width: 20%; text-align: right; padding-left: 10px; }
+.content td { width: 80%; position: relative; display: block; }
+.errorlist { color: #900; }
+.content .submit { border: solid 2px #000; background: #ccc; color: #000; margin-top: 5pt; padding: 0px; width: 132pt; font-size: 12pt;}
