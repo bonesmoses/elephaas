@@ -18,6 +18,7 @@ def pwgen():
 
     return pw
 
+
 def pwcheck(password):
     """
     Check a password for strength requirements.
@@ -25,23 +26,30 @@ def pwcheck(password):
     This function checks a passed password for the following criteria:
 
     * Password is at least 8-characters long.
-    * Password contains as least one or more letter from a-z.
-    * Password contains as least one or more letter from A-Z.
-    * Password contains as least one or more digits.
-    * Password contains as least one or more special characters.
+    * Password must match three of these rules:
+      - Contains as least one or more letter from a-z.
+      - Contains as least one or more letter from A-Z.
+      - Contains as least one or more digits.
+      - Contains as least one or more special characters.
 
     :param password: Password value check for strength requirements.
     """
-    lc = re.compile('[a-z]')
-    uc = re.compile('[A-Z]')
-    digits = re.compile('\d')
-    special = re.compile('[#$%&()*+,-./:;<=>?@\[\]^_{}]')
+    score = 0
 
-    is_secure = False
-    if (len(password) > 7 and re.search(uc, password) and
-        re.search(lc, password) and re.search(digits, password) and
-        re.search(special, password)):
+    if len(password) < 8:
+        return False
 
-        is_secure = True
+    if re.search(re.compile('[A-Z]'), password):
+        score += 1
 
-    return is_secure
+    if re.search(re.compile('[a-z]'), password):
+        score += 1
+
+    if re.search(re.compile('\d'), password):
+        score += 1
+
+    if re.search(re.compile('[#$%&()*+,-./:;<=>?@\[\]^_{}]'), password):
+        score += 1
+
+    return score > 2 and True or False
+
