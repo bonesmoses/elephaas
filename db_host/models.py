@@ -2,8 +2,21 @@ from django.db import models
 
 # Create your models here.
 
-
 class DBHost(models.Model):
+    """
+    Define a DB Host model
+
+    This model defines a table that will store a list of all known EDB
+    environments. This list will be used in the admin to send commands
+    to all systems defined in the admin, or a subset based on search
+    parameters.
+
+    Database hosts must be labeled, and may exist in one of three
+    environments: dev, stage, or prod. Otherwise, all fields are based on
+    database connection parameters. As always, a created and modified date
+    column is added for auditing purposes.
+    """
+
     ENVIRONMENTS = (
         ('prod', 'Production'),
         ('stage', 'Stage'),
