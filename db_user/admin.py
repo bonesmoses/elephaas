@@ -5,9 +5,11 @@ from db_user.forms import DBUserAdminForm
 # Register your models here.
 
 class DBUserAdmin(admin.ModelAdmin):
-    list_display = ('usename',)
     actions = None
     form = DBUserAdminForm
+    list_display = ('usename',)
+    list_per_page = 20
+    search_fields = ('usename',)
 
     def queryset(self, request):
         """
