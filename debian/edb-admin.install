@@ -1,0 +1,5 @@
+db_host opt/edb_admin
+db_user opt/edb_admin
+edb_admin opt/edb_admin
+static opt/edb_admin
+manage.py opt/edb_admin
