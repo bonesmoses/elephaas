@@ -74,7 +74,7 @@ fi
 #
 get_pid()
 {
-    PID=$(pgrep -f "$ADMIN_CMD")
+    PID=$(pgrep -f "$ADMIN_CMD" | tail -1)
     echo $PID
 }
 
@@ -137,9 +137,9 @@ stop()
     # stop it. That may not work, so we need to return status 1 if that
     # fails.
 
-    kill -INT $PID
-    sleep 1
+    kill $PID
     rc=$?
+    sleep 1
 
     PID=$(get_pid)
 
