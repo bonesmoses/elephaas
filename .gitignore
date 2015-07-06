@@ -1,0 +1,10 @@
+*.py[doc]
+
+build/
+develop-eggs/
+dist/
+eggs/
+sdist/
+*.egg-info/
+*.egg
+
