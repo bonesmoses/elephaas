@@ -1,5 +1,5 @@
-db_host opt/edb_admin
-db_user opt/edb_admin
-edb_admin opt/edb_admin
-static opt/edb_admin
-manage.py opt/edb_admin
+db_host opt/pg_admin
+db_user opt/pg_admin
+pg_admin opt/pg_admin
+static opt/pg_admin
+manage.py opt/pg_admin

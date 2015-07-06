@@ -2,17 +2,17 @@
 
 # Debian/Ubuntu Heading
 ### BEGIN INIT INFO
-# Provides: edb_admin
+# Provides: pg_admin
 # Required-Start: $local_fs $remote_fs $network $time
 # Required-Stop: $local_fs $remote_fs $network $time
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: edb_admin database pool service script
+# Short-Description: pg_admin database pool service script
 ### END INIT INFO
 
 # RHEL-based heading:
 # chkconfig: 2345 86 14
-# description: edb_admin database pool service script
+# description: pg_admin database pool service script
 
 # Start with some basic variable assignments. To satisfy either Debian or
 # RHEL systems, we will check the /etc/default and /etc/sysctl directories
@@ -21,13 +21,13 @@
 #
 #   * DISABLE     : Set to 1 to disable service start. 0 by default.
 #   * LOG_DIR     : Directory where service logs should be created.
-#   * BIN_DIR     : Directory where the edb_admin binary resides.
-#   * ADMIN_USER  : Name of the system user that will run edb_admin.
+#   * BIN_DIR     : Directory where the pg_admin binary resides.
+#   * ADMIN_USER  : Name of the system user that will run pg_admin.
 #                   Default: ops.
-#   * EXTRA_OPTS  : Arbitrary options to pass to edb_admin service.
+#   * EXTRA_OPTS  : Arbitrary options to pass to pg_admin service.
 #                   Default: 0.0.0.0:8000
 
-NAME=edb_admin
+NAME=pg_admin
 
 DISABLE=0
 CONF_DIR=/etc/$NAME
@@ -38,22 +38,22 @@ EXTRA_OPTS='0.0.0.0:8000'
 
 # Now inject the overrides:
 
-if [ -f /etc/sysconfig/edb_admin ]; then
-    source /etc/sysconfig/edb_admin
+if [ -f /etc/sysconfig/pg_admin ]; then
+    source /etc/sysconfig/pg_admin
 fi
 
-if [ -f /etc/default/edb_admin ]; then
-    source /etc/default/edb_admin
+if [ -f /etc/default/pg_admin ]; then
+    source /etc/default/pg_admin
 fi
 
 # With user-configured varibles defined, set a few helper variables to act
 # as shortcuts.
 
 ADMIN_LOG="$LOG_DIR/$NAME.log"
-ADMIN_CMD="python /opt/edb_admin/manage.py runserver"
+ADMIN_CMD="python /opt/pg_admin/manage.py runserver"
 
 # Since this script runs as root, make sure the logging and pid directories
-# exist, and are writable by the edb_admin user.
+# exist, and are writable by the pg_admin user.
 
 if [ ! -d $LOG_DIR ]; then
     mkdir -p $LOG_DIR
@@ -70,7 +70,7 @@ fi
 ############################
 
 ##
-# Return the PID of the edb_admin service
+# Return the PID of the pg_admin service
 #
 get_pid()
 {
@@ -79,7 +79,7 @@ get_pid()
 }
 
 ##
-# Start the edb_admin service
+# Start the pg_admin service
 #
 # This start function is fully LSB compliant. Exit codes are defined such
 # that they are compatible with scripts that function based on exit codes.
@@ -92,7 +92,7 @@ start()
     # already running. Exit with status 0 if we find an active PID.
 
     if [ -n "$PID" ]; then
-       echo "edb_admin already running"
+       echo "pg_admin already running"
        return
     fi
 
@@ -108,7 +108,7 @@ start()
     # reason, the start process failed. Otherwise, report success.
 
     if [ $rc != '0' ] || [ -z "$PID" ]; then
-        echo "Could not start edb_admin. Check $ADMIN_LOG."
+        echo "Could not start pg_admin. Check $ADMIN_LOG."
         exit 1
     else
         echo "$NAME service started"
@@ -116,7 +116,7 @@ start()
 }
 
 ##
-# Stop the edb_admin service
+# Stop the pg_admin service
 #
 # This stop function is fully LSB compliant. Exit codes are defined such
 # that they are compatible with scripts that function based on exit codes.
@@ -152,7 +152,7 @@ stop()
 }
 
 ##
-# Restart the edb_admin service
+# Restart the pg_admin service
 #
 # This start function is fully LSB compliant. Exit codes are defined such
 # that they are compatible with scripts that function based on exit codes.
@@ -163,7 +163,7 @@ restart()
 
     # For restart to be fully compliant, it should attempt to start a stopped
     # service. Thus we can't just call stop if the service isn't running, as
-    # that would exit the process prematurely. Only call stop if edb_admin is
+    # that would exit the process prematurely. Only call stop if pg_admin is
     # actually running.
 
     if [ -n "$PID" ]; then
@@ -175,7 +175,7 @@ restart()
 }
 
 ##
-# Reload edb_admin configuration files
+# Reload pg_admin configuration files
 #
 # This reload function is fully LSB compliant. Exit codes are defined such
 # that they are compatible with scripts that function based on exit codes.
@@ -208,7 +208,7 @@ reload()
 }
 
 ##
-# Check status of edb_admin
+# Check status of pg_admin
 #
 # This reload function is fully LSB compliant. Exit codes are defined such
 # that they are compatible with scripts that function based on exit codes.

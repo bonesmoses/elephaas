@@ -5,10 +5,10 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Examples:
-    # url(r'^$', 'edb_admin.views.home', name='home'),
+    # url(r'^$', 'pg_admin.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^$', 'edb_admin.views.index', name='index'),
+    url(r'^$', 'pg_admin.views.index', name='index'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^password/', include('db_user.urls', namespace="db_user")),
 )

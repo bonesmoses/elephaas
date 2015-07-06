@@ -1,7 +1,7 @@
 /**
-* Functions necessary in hosts managed with edb_admin
+* Functions necessary in hosts managed with pg_admin
 *
-* These functions provide an API for the edb_admin Django utility. Because
+* These functions provide an API for the pg_admin Django utility. Because
 * they run with superuser privileges, they can not be installed by the project
 * itself during initialization. Before adding a Database Host in the admin
 * page, make sure to run this SQL on that database as a database superuser
@@ -10,19 +10,19 @@
 * Date $Date: 2014-04-08 $
 * @author Shaun Thomas <sthomas@optionshouse.com>
 * @version: $Revision$
-* @package: edb_admin
+* @package: pg_admin
 */
 
 BEGIN;
 
-SET search_path TO edb_admin;
+SET search_path TO pg_admin;
 
 --------------------------------------------------------------------------------
 -- CREATE PROCEDURES
 --------------------------------------------------------------------------------
 
 /**
-* Create a new EDB user, or modify an existing one.
+* Create a new PG user, or modify an existing one.
 *
 * Since neither ALTER USER or CREATE USER are standard insert/update/delete
 * procedures, this function acts as a wrapper so specifically elevated users
@@ -121,9 +121,9 @@ $BODY$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 
 /**
-* Check an EDB password hash against the passed value.
+* Check an PG password hash against the passed value.
 *
-* The current EDB password hashing algorithm follows these rules:
+* The current PG password hashing algorithm follows these rules:
 *   algo || algo(password + username)
 * where algo is currently md5.
 *
@@ -172,13 +172,13 @@ REVOKE ALL ON FUNCTION spc_check_database_password(VARCHAR, VARCHAR)
   FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION spc_add_database_user(VARCHAR, VARCHAR)
-   TO edb_admin;
+   TO pg_admin;
 
 GRANT EXECUTE ON FUNCTION spc_drop_database_user(VARCHAR)
-   TO edb_admin;
+   TO pg_admin;
 
 GRANT EXECUTE ON FUNCTION spc_check_database_password(VARCHAR, VARCHAR)
-   TO edb_admin;
+   TO pg_admin;
 
 COMMIT; 
 

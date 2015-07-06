@@ -20,7 +20,7 @@ DATABASES = {
         'HOST': 'localhost',
         'USER': 'postgres',
         'OPTIONS': {
-            'options': '-c search_path=edb_admin',
+            'options': '-c search_path=pg_admin',
         }
     }
 }

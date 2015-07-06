@@ -1,12 +1,12 @@
-Source: edb-admin
+Source: pg-admin
 Maintainer: Shaun Thomas <sthomas@optionshouse.com>
 Section: python
 Priority: optional
-Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 8.0.0)
+Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 8.0.0), python-setuptools (>= 0.6b3), python-psycopg2
 Standards-Version: 3.9.3
 
-Package: edb-admin
+Package: pg-admin
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
-Description: The edb_admin site for all of your EDB administration needs.
+Description: The pg_admin site for all of your EDB administration needs.
 

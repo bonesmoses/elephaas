@@ -1,7 +1,7 @@
 import os
 
 """
-Django settings for edb_admin project.
+Django settings for pg_admin project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.6/topics/settings/
@@ -53,9 +53,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'edb_admin.urls'
+ROOT_URLCONF = 'pg_admin.urls'
 
-WSGI_APPLICATION = 'edb_admin.wsgi.application'
+WSGI_APPLICATION = 'pg_admin.wsgi.application'
 
 
 # Database
@@ -68,7 +68,7 @@ DATABASES = {
         'HOST': 'localhost',
         'USER': 'postgres',
         'OPTIONS': {
-            'options': '-c search_path=edb_admin',
+            'options': '-c search_path=pg_admin',
         }
     }
 }
