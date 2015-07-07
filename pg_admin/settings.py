@@ -41,7 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'db_user',
-    'db_host',
+    'db_instance',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -99,4 +99,8 @@ STATICFILES_DIRS = (
 try:
   from local_settings import *
 except ImportError:
+  print "POOPIES!"
   pass
+
+from django.contrib.admin.views import main
+main.EMPTY_CHANGELIST_VALUE = '-'

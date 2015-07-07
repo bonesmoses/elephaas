@@ -96,7 +96,7 @@ class DBUserPasswordForm(forms.ModelForm):
         Save user changes to all database hosts.
         
         We use an external control library here because we're broadcasting
-        the change to all database hosts defined in the db_host app. If we
+        the change to all database hosts defined in the db_instance app. If we
         got this far, ideally verification steps have already taken place.
         """
         username = self.cleaned_data.get('usename')

@@ -1,4 +1,4 @@
-from db_host.models import DBHost
+from db_instance.models import DBInstance
 import psycopg2
 
 class Control():
@@ -15,23 +15,23 @@ class Control():
     """
 
 
-    def connect(self, db_host):
+    def connect(self, db_instance):
         """
-        Return an EDB connection for a specified DBHost model
+        Return an EDB connection for a specified DBInstance model
 
         Unlike most Django pieces, this directly calls out to psycopg. This
         class isn't meant to be abstract, and this tool is built for EDB.
         See psycopg documentation on how to interact with the returned 
         connection object.
 
-        :param db_host: A DBHost Django model object containing connection
-            information.
+        :param db_instance: A DBInstance Django model object containing
+            connection information.
 
         :rtype: psycopg2 connection object
         """
         return psycopg2.connect(
-            host = db_host.db_host, port = db_host.db_port,
-            database = db_host.db_name, user = db_host.db_user
+            host = db_instance.db_instance, port = db_instance.db_port,
+            database = db_instance.db_name, user = db_instance.db_user
         )
 
 
@@ -39,15 +39,15 @@ class Control():
         """
         Delete a user to all registered EDB hosts
 
-        Assuming the DBHost model is configured with a list of defined
-        EDB hosts, connect to each and call the spc_drop_database_user
+        Assuming the DBInstance model is configured with a list of defined
+        hosts, connect to each and call the spc_drop_database_user
         procedure to remove the named user.
 
         :param username: EDB username to delete.
         """
-        for db_host in DBHost.objects.all():
+        for db_instance in DBInstance.objects.all():
             try:
-                conn = self.connect(db_host)
+                conn = self.connect(db_instance)
                 cur = conn.cursor()
                 cur.execute("SELECT spc_drop_database_user(%s)", (username,))
                 conn.commit()
@@ -59,7 +59,7 @@ class Control():
         """
         Save a new or modified user to all registered EDB hosts
 
-        Assuming the DBHost model is configured with a list of defined 
+        Assuming the DBInstance model is configured with a list of defined 
         EDB hosts, connect to each and call the spc_add_database_user
         procedure to create a new user, or change an existing one.
 
@@ -67,9 +67,9 @@ class Control():
         :param password: Password for the above user. If the user already
             exists, this will be their new password.
         """
-        for db_host in DBHost.objects.all():
+        for db_instance in DBInstance.objects.all():
             try:
-                conn = self.connect(db_host)
+                conn = self.connect(db_instance)
                 cur = conn.cursor()
                 cur.execute("SELECT spc_add_database_user(%s, %s)", 
                     (username, password)

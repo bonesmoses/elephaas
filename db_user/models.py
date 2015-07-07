@@ -31,7 +31,7 @@ class DBUser(models.Model):
         Save user changes to all database hosts.
         
         We use an external control library here because we're broadcasting
-        the change to all database hosts defined in the db_host app.
+        the change to all database hosts defined in the db_instance app.
         """
         ctl = Control()
         ctl.save(self.usename, self.passwd)
@@ -42,7 +42,7 @@ class DBUser(models.Model):
         Delete a user from all database hosts.
         
         We use an external control library here because we're broadcasting
-        the change to all database hosts defined in the db_host app.
+        the change to all database hosts defined in the db_instance app.
         """
         ctl = Control()
         ctl.delete(self.usename)
