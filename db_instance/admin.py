@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 import paramiko
-from db_instance.models import DBInstance
+from db_instance.models import DBInstance, DBReplica
 
 # Database Instance Admin Model
 
@@ -11,9 +11,9 @@ class DBInstanceAdmin(admin.ModelAdmin):
     actions = ['stop_instances', 'start_instances']
     exclude = ('created_dt', 'modified_dt')
     list_display = ('instance', 'db_host', 'db_port', 'version', 'duty',
-        'master_host', 'environment', 'is_online')
+        'get_master', 'environment', 'is_online')
     list_filter = ('environment', 'is_online', 'duty')
-    search_fields = ('instance', 'db_host', 'db_user', 'version', 'master_host')
+    search_fields = ('instance', 'db_host', 'db_user', 'version', 'get_master')
 
 
     def __run_remote_cmd(self, host, command):
@@ -38,6 +38,12 @@ class DBInstanceAdmin(admin.ModelAdmin):
         err = stderr.read()
 
         return err
+
+
+    def get_master(self, instance):
+        return str(instance.master)
+    get_master.short_description = 'Master'
+    get_master.admin_order_field = 'dbinstance__db_host'
 
 
     def stop_instances(self, request, queryset):
@@ -108,4 +114,14 @@ class DBInstanceAdmin(admin.ModelAdmin):
     start_instances.short_description = "Start selected PostgreSQL Instances"
 
 
+class DBReplicaAdmin(DBInstanceAdmin):
+    #actions = ['stop_instances', 'start_instances']
+    exclude = ('created_dt', 'modified_dt')
+    list_display = ('instance', 'db_host', 'db_port', 'duty',
+        'get_master')
+    list_filter = ('duty',)
+    search_fields = ('instance', 'db_host', 'get_master')
+
+
 admin.site.register(DBInstance, DBInstanceAdmin)
+admin.site.register(DBReplica, DBReplicaAdmin)

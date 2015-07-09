@@ -22,8 +22,6 @@ class string_with_title(str):
     __deepcopy__ = lambda self, memodict: self
 
 
-# Database Instance Admin Model
-
 class DBInstance(models.Model):
     """
     Define a DB Instance model
@@ -46,7 +44,7 @@ class DBInstance(models.Model):
         ('slave', 'Slave'),
     )
 
-    instance_id = models.AutoField(primary_key=True, editable=False)
+    instance_id = models.AutoField(primary_key=True)
     instance = models.CharField('Instance Name', max_length=40)
     environment = models.CharField('Environment', max_length=10, choices=ENVIRONMENTS)
 
@@ -59,8 +57,7 @@ class DBInstance(models.Model):
     is_online = models.BooleanField('Online', editable=False, default=False)
 
     duty = models.CharField('Role', max_length=6, choices=DUTIES, default='master')
-    master_host = models.CharField('Master Host', max_length=40, blank=True)
-    master_port = models.IntegerField('Master Port', max_length=5, blank=True)
+    master = models.ForeignKey('self', on_delete = 'SET_NULL')
 
     created_dt = models.DateField()
     modified_dt = models.DateField()
@@ -72,3 +69,11 @@ class DBInstance(models.Model):
 
     def __unicode__(self):
         return self.db_host + ' - ' + self.instance
+
+
+class DBReplica(DBInstance):
+    class Meta:
+        app_label = DBInstance._meta.app_label
+        proxy = True
+        verbose_name = 'Replica'
+

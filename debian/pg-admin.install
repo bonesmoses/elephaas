@@ -1,4 +1,5 @@
 db_instance opt/pg_admin
+db_user opt/pg_admin
 pg_admin opt/pg_admin
 static opt/pg_admin
 manage.py opt/pg_admin

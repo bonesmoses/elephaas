@@ -23,7 +23,7 @@
 #   * LOG_DIR     : Directory where service logs should be created.
 #   * BIN_DIR     : Directory where the pg_admin binary resides.
 #   * ADMIN_USER  : Name of the system user that will run pg_admin.
-#                   Default: ops.
+#                   Default: postgres.
 #   * EXTRA_OPTS  : Arbitrary options to pass to pg_admin service.
 #                   Default: 0.0.0.0:8000
 
@@ -33,7 +33,7 @@ DISABLE=0
 CONF_DIR=/etc/$NAME
 LOG_DIR=/var/log/$NAME
 BIN_DIR=/usr/bin
-ADMIN_USER=ops
+ADMIN_USER=postgres
 EXTRA_OPTS='0.0.0.0:8000'
 
 # Now inject the overrides:

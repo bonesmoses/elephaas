@@ -19,4 +19,4 @@ class DBUserAdmin(admin.ModelAdmin):
         qs = qs.exclude(usesuper__exact = True)
         return qs
 
-admin.site.register(DBUser, DBUserAdmin)
+#admin.site.register(DBUser, DBUserAdmin)
