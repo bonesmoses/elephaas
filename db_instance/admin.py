@@ -1,6 +1,14 @@
 from django.contrib import admin, messages
+from django.template import RequestContext  
+from django.conf.urls import patterns  
+from django.shortcuts import render_to_response, render
+
 import paramiko
 from db_instance.models import DBInstance, DBReplica
+
+# Disable the "Delete selected" action. Bad.
+
+admin.site.disable_action('delete_selected')
 
 # Database Instance Admin Model
 
@@ -115,12 +123,71 @@ class DBInstanceAdmin(admin.ModelAdmin):
 
 
 class DBReplicaAdmin(DBInstanceAdmin):
-    #actions = ['stop_instances', 'start_instances']
+    actions = ['rebuild_instances']
+    #actions = None
     exclude = ('created_dt', 'modified_dt')
     list_display = ('instance', 'db_host', 'db_port', 'duty',
         'get_master')
     list_filter = ('duty',)
     search_fields = ('instance', 'db_host', 'get_master')
+
+
+    def get_actions(self, request):
+        """
+        Return our actions, instead of those from our super class.
+        """
+        actions = super(DBReplicaAdmin, self).get_actions(request)
+        del actions['stop_instances']
+        del actions['start_instances']
+        return actions
+
+#    def get_urls(self):
+#        urls = super(DBReplicaAdmin, self).get_urls()
+#        my_urls = patterns('',
+#            (r'\d+/rebuild/$', self.admin_site.admin_view(self.rebuild_instances)),
+#        )
+#        return my_urls + urls
+
+
+    def rebuild_instances(self, request, queryset):
+        """
+        Rebuild all transmitted PostgreSQL replication instances from master
+
+        """
+
+        if request.POST.get('post') == 'yes':
+            inst_list = request.POST.getlist('_selected_action')
+            for inst in inst_list:
+                self.message_user(request, "%s rebuilt!" % inst)
+            return
+
+        # Before presenting the confirmation form, filter out any instances
+        # with no master. They can't be rebuilt for a master... duh.
+
+        rebuild_list = []
+        obj_list = []
+
+        for inst in queryset:
+            if hasattr(inst, 'master'):
+                rebuild_list.append('%s (%s)' % (inst, inst.master))
+                obj_list.append(inst)
+            else:
+                self.message_user(request, "%s has no master" % inst)
+
+        if len(rebuild_list) < 1:
+            return
+
+        # Now go to the confirmation form. It's very basic, and only serves
+        # to disrupt the process and avoid accidental rebuilds.
+
+        return render(request, 'admin/rebuild_confirmation.html', 
+                {'obj_list' : obj_list,
+                 'opts': self.model._meta,
+                 'rebuild_list': rebuild_list }
+        )
+
+
+    rebuild_instances.short_description = "Rebuild selected PostgreSQL Slaves"
 
 
 admin.site.register(DBInstance, DBInstanceAdmin)
