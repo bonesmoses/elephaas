@@ -57,7 +57,7 @@ class DBInstance(models.Model):
     is_online = models.BooleanField('Online', editable=False, default=False)
 
     duty = models.CharField('Role', max_length=6, choices=DUTIES, default='master')
-    master = models.ForeignKey('self', on_delete = 'SET_NULL')
+    master = models.ForeignKey('self', on_delete = 'SET_NULL', blank=True, null=True)
 
     created_dt = models.DateField()
     modified_dt = models.DateField()
