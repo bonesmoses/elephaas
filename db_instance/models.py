@@ -77,3 +77,29 @@ class DBReplica(DBInstance):
         proxy = True
         verbose_name = 'Replica'
 
+
+class DBDR(models.Model):
+    """
+    Define a DB Disaster Recovery model
+
+    
+    """
+
+    drpair_id = models.AutoField(primary_key=True)
+    label = models.CharField('Label', max_length=40)
+    primary = models.ForeignKey('DBInstance', related_name = '+')
+    secondary = models.ForeignKey('DBInstance', related_name = '+')
+    vhost = models.CharField('Virtual Host', max_length=40)
+
+    created_dt = models.DateField()
+    modified_dt = models.DateField()
+
+    class Meta:
+        app_label = string_with_title('db_instance', 'Instance Management')
+        verbose_name = 'Disaster Recovery Pair'
+        db_table = 'util_drpair'
+
+    def __unicode__(self):
+        return self.label
+
+
