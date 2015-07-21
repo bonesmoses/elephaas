@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 from django.contrib import admin, messages
 from django.template import RequestContext  
@@ -46,9 +47,34 @@ class DBInstanceAdmin(admin.ModelAdmin):
         client.connect(host, username='postgres')
         stdin, stdout, stderr = client.exec_command(command)
         err = stderr.read()
+        client.close()
 
         if err:
             raise Exception(err)
+
+
+    def _send_file(self, host, source, dest):
+        """
+        Transmit a file to a remote host via SSH
+
+        For the given host, this function assumes an SSH key is set up between
+        both hosts. Given this, we transmit the indicated file to the target
+        location. Any errors are raised and passed along.
+
+        :param host: Name of host where the file should reside.
+        :param source: Name of file to send to indicated host.
+        :param dest: Full path on host to send file.
+
+        :raise: Exception output obtained from secure transmission, if any.
+        """
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(host, username='postgres')
+        sftp = client.open_sftp()
+        sftp.put(source, dest)
+        sftp.close()
+        client.close()
 
 
     def get_readonly_fields(self, request, obj=None):
@@ -144,7 +170,7 @@ class DBReplicaAdmin(DBInstanceAdmin):
     exclude = ('created_dt', 'modified_dt')
     list_display = ('instance', 'db_host', 'db_port', 'duty',
         'get_master')
-    list_filter = ('duty',)
+    list_filter = ('environment', 'duty')
     search_fields = ('instance', 'db_host', 'get_master')
 
 
@@ -154,13 +180,6 @@ class DBReplicaAdmin(DBInstanceAdmin):
         """
         super(DBReplicaAdmin, self).__init__(*args, **kwargs)
         self.list_display_links = (None, )
-
-
-    def queryset(self, request):
-        """
-        Restrict this model to only report slave instances.
-        """
-        return self.model.objects.exclude(master = None)
 
 
     def get_actions(self, request):
@@ -319,19 +338,21 @@ class DBReplicaAdmin(DBInstanceAdmin):
 
             for inst_id in request.POST.getlist('_selected_action'):
                 inst = DBInstance.objects.get(pk=inst_id)
-                old_master = inst.master.db_host
-                old_port = inst.master.db_port
                 ver = '.'.join(inst.version.split('.')[:2])
 
                 try:
+                    rec_file = tempfile.NamedTemporaryFile(bufsize=0)
+                    rec_path = os.path.join(inst.pgdata, 'recovery.conf')
 
-                    self._run_remote_cmd(inst.db_host,
-                        "sed -i.bak 's/%s/%s/; s/%s/%s/;' %s" % (
-                            old_master, master.db_host,
-                            old_port, master.db_port,
-                            os.path.join(inst.pgdata, 'recovery.conf')
-                        )
+                    info = 'user=%s host=%s port=%s application_name=%s' % (
+                        'postgres', master.db_host, master.db_port,
+                        inst.db_host + '_' + inst.instance
                     )
+
+                    rec_file.write("standby_mode = 'on'\n")
+                    rec_file.write("primary_conninfo = '%s'\n" % info)
+                    self._send_file(inst.db_host, rec_file.name, rec_path)
+                    rec_file.close()
 
                     self._run_remote_cmd(inst.db_host,
                         'pg_ctlcluster %s %s reload' % (
@@ -339,6 +360,7 @@ class DBReplicaAdmin(DBInstanceAdmin):
                         )
                     )
 
+                    inst.duty = 'slave'
                     inst.master = master
                     inst.save()
 
