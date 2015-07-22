@@ -90,6 +90,7 @@ class DBDR(models.Model):
     primary = models.ForeignKey('DBInstance', related_name = '+')
     secondary = models.ForeignKey('DBInstance', related_name = '+')
     vhost = models.CharField('Virtual Host', max_length=40)
+    in_sync = models.BooleanField('In Sync', default=False)
 
     created_dt = models.DateField()
     modified_dt = models.DateField()

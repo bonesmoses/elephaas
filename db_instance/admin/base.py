@@ -4,8 +4,6 @@ import tempfile
 
 __all__ = ['PGUtility']
 
-# Database Instance Admin Model
-
 class PGUtility():
     """
     Utility class for managing PostgreSQL instances within Django
@@ -129,6 +127,10 @@ class PGUtility():
         """
 
         inst = self.instance
+
+        if not inst.is_online:
+            return
+
         ver = '.'.join(inst.version.split('.')[:2])
         self.__run_cmd(
             'pg_ctlcluster %s %s reload' % (ver, inst.instance)
@@ -158,7 +160,7 @@ class PGUtility():
         sync += ' --exclude=postmaster.*'
         sync += ' --delete postgres@%s:%s/ %s'
 
-        self.__run_cmd(inst.db_host, sync % (
+        self.__run_cmd(sync % (
             inst.master.db_host, inst.master.pgdata, inst.pgdata
         ))
 
@@ -183,7 +185,7 @@ class PGUtility():
         inst = self.instance
         ver = '.'.join(inst.version.split('.')[:2])
 
-        self.__run_cmd(inst.db_host,
+        self.__run_cmd(
             'pg_ctlcluster %s %s promote' % (ver, inst.instance)
         )
 
