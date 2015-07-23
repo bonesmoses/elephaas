@@ -59,8 +59,6 @@ class DBInstanceAdmin(admin.ModelAdmin):
                 continue
 
             self.message_user(request, "%s stopped!" % inst)
-            inst.is_online = False
-            inst.save()
 
 
     def start_instances(self, request, queryset):
@@ -90,8 +88,6 @@ class DBInstanceAdmin(admin.ModelAdmin):
                 continue
 
             self.message_user(request, "%s started!" % inst)
-            inst.is_online = True
-            inst.save()
 
 
     stop_instances.short_description = "Stop selected PostgreSQL Instances"

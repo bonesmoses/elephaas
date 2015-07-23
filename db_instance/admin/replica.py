@@ -35,6 +35,7 @@ class DBReplicaAdmin(DBInstanceAdmin):
         Return our actions, instead of those from our super class.
         """
         actions = super(DBReplicaAdmin, self).get_actions(request)
+        del actions['delete_selected']
         del actions['stop_instances']
         del actions['start_instances']
         return actions

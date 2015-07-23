@@ -87,13 +87,12 @@ class PGUtility():
 
         inst = self.instance
 
-        if inst.is_online:
-            return
+        if not inst.is_online:
+            ver = '.'.join(inst.version.split('.')[:2])
+            self.__run_cmd(
+                'pg_ctlcluster %s %s start' % (ver, inst.instance)
+            )
 
-        ver = '.'.join(inst.version.split('.')[:2])
-        self.__run_cmd(
-            'pg_ctlcluster %s %s start' % (ver, inst.instance)
-        )
         inst.is_online = True
         inst.save()
 
@@ -106,13 +105,12 @@ class PGUtility():
         """
         inst = self.instance
 
-        if not inst.is_online:
-            return
+        if inst.is_online:
+            ver = '.'.join(inst.version.split('.')[:2])
+            self.__run_cmd(
+                'pg_ctlcluster %s %s stop -m fast' % (ver, inst.instance)
+            )
 
-        ver = '.'.join(inst.version.split('.')[:2])
-        self.__run_cmd(
-            'pg_ctlcluster %s %s stop -m fast' % (ver, inst.instance)
-        )
         inst.is_online = False
         inst.save()
 
