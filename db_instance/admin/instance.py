@@ -14,7 +14,8 @@ class DBInstanceAdmin(admin.ModelAdmin):
     list_display = ('instance', 'db_host', 'db_port', 'version', 'duty',
         'get_master', 'environment', 'is_online')
     list_filter = ('environment', 'is_online', 'duty')
-    search_fields = ('instance', 'db_host', 'db_user', 'version', 'get_master')
+    search_fields = ('instance', 'db_host', 'db_user', 'version',
+        'master__instance', 'master__db_host')
 
 
     def get_readonly_fields(self, request, obj=None):

@@ -17,7 +17,8 @@ class DBReplicaAdmin(DBInstanceAdmin):
     list_display = ('instance', 'db_host', 'db_port', 'duty',
         'get_master')
     list_filter = ('environment', 'duty')
-    search_fields = ('instance', 'db_host', 'get_master')
+    search_fields = ('instance', 'db_host', 'master__instance',
+        'master__db_host')
 
     can_delete = False
 

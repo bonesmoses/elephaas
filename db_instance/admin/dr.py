@@ -19,7 +19,8 @@ class DBDRAdmin(admin.ModelAdmin):
     actions = ['failover_pair', 'rebuild_dr']
     exclude = ('created_dt', 'modified_dt')
     list_display = ('label', 'primary', 'secondary', 'vhost', 'in_sync')
-    search_fields = ('label', 'primary', 'secondary', 'vhost')
+    search_fields = ('label', 'primary__instance', 'primary__db_host',
+        'secondary__instance', 'secondary__db_host', 'vhost')
 
 
     def failover_pair(self, request, queryset):
