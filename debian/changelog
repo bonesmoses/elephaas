@@ -1,3 +1,13 @@
+pg-admin (0.3.0-1) unstable; urgency=low
+
+  * Only allow to remaster from existing masters.
+  * Sort instances by host name and instance name by default.
+  * Cleaned up and simplified several form templates.
+  * Added version as sidebar filter.
+  * Added online indicator to replica menu.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 11 Aug 2015 11:29:14 -0500
+
 pg-admin (0.2.1-1) unstable; urgency=low
 
   * Fixed broken admin searching.

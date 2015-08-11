@@ -15,8 +15,8 @@ class DBReplicaAdmin(DBInstanceAdmin):
     actions = ['rebuild_instances', 'promote_instances', 'remaster_instances']
     exclude = ('created_dt', 'modified_dt')
     list_display = ('instance', 'db_host', 'db_port', 'duty',
-        'get_master')
-    list_filter = ('environment', 'duty')
+        'get_master', 'is_online')
+    list_filter = ('environment', 'duty', 'version')
     search_fields = ('instance', 'db_host', 'master__instance',
         'master__db_host')
 
@@ -77,12 +77,9 @@ class DBReplicaAdmin(DBInstanceAdmin):
         # Now go to the confirmation form. It's very basic, and only serves
         # to disrupt the process and avoid accidental rebuilds.
 
-        rebuild_list = ['%s (%s)' % (inst, inst.master) for inst in queryset]
-
         return render(request, 'admin/rebuild_confirmation.html', 
                 {'queryset' : queryset,
-                 'opts': self.model._meta,
-                 'rebuild_list': rebuild_list }
+                 'opts': self.model._meta }
         )
 
 
@@ -118,8 +115,7 @@ class DBReplicaAdmin(DBInstanceAdmin):
 
         return render(request, 'admin/promote_confirmation.html', 
                 {'queryset' : queryset,
-                 'opts': self.model._meta,
-                 'promote_list': promote_list }
+                 'opts': self.model._meta }
         )
 
 
@@ -159,15 +155,14 @@ class DBReplicaAdmin(DBInstanceAdmin):
         # also disable the ability to add new hosts, which shouldn't apply
         # from this menu.
 
-        promote_list = ['%s (%s)' % (inst, inst.master) for inst in queryset]
         useform = self.get_form(request)
         master = useform.base_fields['master']
+        master.queryset = master.queryset.filter(duty = 'master')
         master.widget.can_add_related = False
 
         return render(request, 'admin/remaster.html', 
                 {'queryset' : queryset,
                  'opts': self.model._meta,
-                 'promote_list': promote_list,
                  'form': useform }
         )
 

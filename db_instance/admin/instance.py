@@ -13,7 +13,7 @@ class DBInstanceAdmin(admin.ModelAdmin):
     exclude = ('created_dt', 'modified_dt')
     list_display = ('instance', 'db_host', 'db_port', 'version', 'duty',
         'get_master', 'environment', 'is_online')
-    list_filter = ('environment', 'is_online', 'duty')
+    list_filter = ('environment', 'is_online', 'duty', 'version')
     search_fields = ('instance', 'db_host', 'db_user', 'version',
         'master__instance', 'master__db_host')
 

@@ -66,6 +66,7 @@ class DBInstance(models.Model):
         app_label = string_with_title('db_instance', 'Instance Management')
         verbose_name = 'Database Instance'
         db_table = 'util_instance'
+        ordering = ['db_host', 'instance']
 
     def __unicode__(self):
         return self.db_host + ' - ' + self.instance
