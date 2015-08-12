@@ -26,8 +26,10 @@ After installing the necessary parts:
 * Create new secret key, ldap password, etc.
 * As postgres user, install the database elements:
 
-        cd /opt/pg_admin
-        python manage.py syncdb
+ ```bash
+ cd /opt/pg_admin
+ python manage.py syncdb
+ ```
 
 
 Usage Instructions
