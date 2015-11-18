@@ -1,3 +1,10 @@
+pg-admin (0.4.0-1) unstable; urgency=low
+
+  * Removed "Auth" menu as LDAP supercedes it.
+  * Sped up rsync operation slightly.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Wed, 18 Nov 2015 10:39:43 -0600
+
 pg-admin (0.3.0-1) unstable; urgency=low
 
   * Only allow to remaster from existing masters.
