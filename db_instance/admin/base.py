@@ -150,13 +150,16 @@ class PGUtility():
         inst = self.instance
 
         # If the instance is online, stop it so we don't synchronize open
-        # files. That would be bad, Mmmkay?
+        # files. That would be bad, Mmmkay? While we're at it, we should
+        # only transfer whole files to avoid excessive reads on the slave
+        # which can slow down the transfers.
 
         self.stop()
 
-        sync = 'rsync -a --rsh=ssh --exclude=recovery.conf'
+        sync = 'rsync -a --rsh=ssh -W --delete'
+        sync += ' --exclude=recovery.conf'
         sync += ' --exclude=postmaster.*'
-        sync += ' --delete postgres@%s:%s/ %s'
+        sync += ' postgres@%s:%s/ %s'
 
         self.__run_cmd(sync % (
             inst.master.db_host, inst.master.pgdata, inst.pgdata
@@ -223,7 +226,7 @@ class PGUtility():
         rec_path = os.path.join(inst.pgdata, 'recovery.conf')
 
         info = 'user=%s host=%s port=%s application_name=%s' % (
-            'postgres', master.db_host, master.db_port,
+            'replication', master.db_host, master.db_port,
             inst.db_host + '_' + inst.instance
         )
 
