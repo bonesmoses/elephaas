@@ -18,7 +18,7 @@ __all__ = ['DBDRAdmin']
 class DBDRAdmin(admin.ModelAdmin):
     actions = ['failover_pair', 'rebuild_dr']
     exclude = ('created_dt', 'modified_dt')
-    list_display = ('label', 'primary', 'secondary', 'vhost', 'in_sync')
+    list_display = ('label', 'primary', 'secondary', 'vhost', 'get_sync_status')
     search_fields = ('label', 'primary__instance', 'primary__db_host',
         'secondary__instance', 'secondary__db_host', 'vhost')
 
@@ -108,6 +108,20 @@ class DBDRAdmin(admin.ModelAdmin):
 
 
     failover_pair.short_description = "Switch Selected Pairs to Secondary Node"
+
+
+    def get_sync_status(self, dbdr):
+        """
+        Return the number of bytes DR secondary is behind the primary
+        """
+
+        master = PGUtility(dbdr.primary)
+        slave = PGUtility(dbdr.secondary)
+        status = slave.get_sync_lag(master.get_xlog_location())
+
+        return status or 'Unknown'
+
+    get_sync_status.short_description = "Sync Delay (bytes)"
 
 
     def rebuild_dr(self, request, queryset):

@@ -1,3 +1,11 @@
+pg-admin (0.5.0-1) unstable; urgency=low
+
+  * Added new function to retrieve master xlog location.
+  * Added new function to get slave sync delay.
+  * Fixed a bug that broke ability to delete instance entries.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Mon, 23 Nov 2015 15:07:43 -0600
+
 pg-admin (0.4.0-1) unstable; urgency=low
 
   * Removed "Auth" menu as LDAP supercedes it.
