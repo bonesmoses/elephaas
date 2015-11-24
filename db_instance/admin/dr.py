@@ -119,7 +119,7 @@ class DBDRAdmin(admin.ModelAdmin):
         slave = PGUtility(dbdr.secondary)
         status = slave.get_sync_lag(master.get_xlog_location())
 
-        return status or 'Unknown'
+        return status is None and 'Unknown' or "{:,}".format(status)
 
     get_sync_status.short_description = "Sync Delay (bytes)"
 

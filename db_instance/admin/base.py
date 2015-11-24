@@ -152,14 +152,14 @@ class PGUtility():
             # Never trust user input. Even if we're the user.
             master_xlog = re.sub('[^A-Z/0-9]', '', master_xlog)
 
-            SQL = "SELECT pg_xlog_location_diff(pg_last_xlog_replay_location(), '%s')" % master_xlog
+            SQL = "SELECT pg_xlog_location_diff('%s', pg_last_xlog_replay_location())" % master_xlog
             bytes_diff = self.__run_cmd(
                 'psql -At -p %s -c "%s"' % (inst.db_port, SQL)
             )
         except Exception:
             return None
 
-        return bytes_diff
+        return abs(int(bytes_diff))
 
 
     def stop(self):
