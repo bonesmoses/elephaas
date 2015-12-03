@@ -223,8 +223,21 @@ class PGUtility():
 
         sync = 'rsync -a --rsh=ssh -W --delete'
         sync += ' --exclude=recovery.conf'
+        sync += ' --exclude=pg_xlog/*'
         sync += ' --exclude=postmaster.*'
         sync += ' postgres@%s:%s/ %s'
+
+        self.__run_cmd(sync % (
+            inst.master.db_host, inst.master.pgdata, inst.pgdata
+        ))
+
+        # Handle the pg_xlog data separately so we get all of the upstream
+        # changes that might have happened during the transfer. go last. This
+        # prevents rsync from complaining about missing files since xlog files
+        # rotate frequently.
+
+        sync = 'rsync -a --rsh=ssh -W --delete'
+        sync += ' postgres@%s:%s/pg_xlog %s'
 
         self.__run_cmd(sync % (
             inst.master.db_host, inst.master.pgdata, inst.pgdata
