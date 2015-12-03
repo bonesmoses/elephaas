@@ -1,3 +1,9 @@
+pg-admin (0.6.0-1) unstable; urgency=low
+
+  * Revise rsync to work in two parts to prevent xlog cycling during sync.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 03 Dec 2015 16:32:12 -0600
+
 pg-admin (0.5.0-1) unstable; urgency=low
 
   * Added new function to retrieve master xlog location.
