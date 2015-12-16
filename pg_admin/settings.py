@@ -11,7 +11,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 """
-Django settings for pg_admin project.
+Django settings for elephaas project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.6/topics/settings/
@@ -62,8 +62,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'pg_admin.urls'
-WSGI_APPLICATION = 'pg_admin.wsgi.application'
+ROOT_URLCONF = 'elephaas.urls'
+WSGI_APPLICATION = 'elephaas.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django_auth_ldap.backend.LDAPBackend',

@@ -1,7 +1,7 @@
 /**
-* Functions necessary in hosts managed with pg_admin
+* Functions necessary in hosts managed with elephaas
 *
-* These functions provide an API for the pg_admin Django utility. Because
+* These functions provide an API for the elephaas Django utility. Because
 * they run with superuser privileges, they can not be installed by the project
 * itself during initialization. Before adding a Database Host in the admin
 * page, make sure to run this SQL on that database as a database superuser
@@ -10,12 +10,12 @@
 * Date $Date: 2014-04-08 $
 * @author Shaun Thomas <sthomas@optionshouse.com>
 * @version: $Revision$
-* @package: pg_admin
+* @package: elephaas
 */
 
 BEGIN;
 
-SET search_path TO pg_admin;
+SET search_path TO elephaas;
 
 --------------------------------------------------------------------------------
 -- CREATE PROCEDURES
@@ -172,13 +172,13 @@ REVOKE ALL ON FUNCTION spc_check_database_password(VARCHAR, VARCHAR)
   FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION spc_add_database_user(VARCHAR, VARCHAR)
-   TO pg_admin;
+   TO elephaas;
 
 GRANT EXECUTE ON FUNCTION spc_drop_database_user(VARCHAR)
-   TO pg_admin;
+   TO elephaas;
 
 GRANT EXECUTE ON FUNCTION spc_check_database_password(VARCHAR, VARCHAR)
-   TO pg_admin;
+   TO elephaas;
 
 COMMIT; 
 

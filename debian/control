@@ -8,5 +8,5 @@ Standards-Version: 3.9.3
 Package: pg-admin
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-paramiko, python-django, python-django-auth-ldap, python-dnspython
-Description: The pg_admin site for all of your EDB administration needs.
+Description: The elephaas site for all of your EDB administration needs.
 

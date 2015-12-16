@@ -1,7 +1,7 @@
-What is PG Admin
+What is ElepHaaS
 ================
 
-PG Admin is a Django application written specifically to administer large constellations of PostgreSQL instances distributed across several physical servers. Features include:
+ElepHaaS is a Django application written specifically to administer large constellations of PostgreSQL instances distributed across several physical servers. Features include:
 
 * Several view & filter options to focus on specific groups.
 * Start or stop any managed instance.
@@ -27,7 +27,7 @@ After installing the necessary parts:
 * As postgres user, install the database elements:
 
  ```bash
- cd /opt/pg_admin
+ cd /opt/elephaas
  python manage.py syncdb
  ```
 
@@ -35,7 +35,7 @@ After installing the necessary parts:
 Usage Instructions
 ==================
 
-The packaged version is distributed with a standard init script that can start or stop PG Admin as a standalone Django application on port 8000. If using a proxy through another webserver software, feel free to change this port.
+The packaged version is distributed with a standard init script that can start or stop ElepHaaS as a standalone Django application on port 8000. If using a proxy through another webserver software, feel free to change this port.
 
 In all other cases, redirect a browser to the following URL:
 
