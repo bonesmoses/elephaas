@@ -1,12 +1,12 @@
-Source: pg-admin
+Source: elephaas
 Maintainer: Shaun Thomas <sthomas@optionshouse.com>
 Section: python
 Priority: optional
 Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 8.0.0), python-setuptools (>= 0.6b3), python-psycopg2, python-django-auth-ldap, python-paramiko, python-dnspython
 Standards-Version: 3.9.3
 
-Package: pg-admin
+Package: elephaas
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-paramiko, python-django, python-django-auth-ldap, python-dnspython
-Description: The elephaas site for all of your EDB administration needs.
+Description: ElepHaaS is a Postgres Herd as a Service administration tool. Configure, deploy, and replicate Postgres application clusters with ease.
 

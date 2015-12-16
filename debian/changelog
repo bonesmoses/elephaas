@@ -1,10 +1,10 @@
-pg-admin (0.6.0-1) unstable; urgency=low
+elephaas (0.6.0-1) unstable; urgency=low
 
   * Revise rsync to work in two parts to prevent xlog cycling during sync.
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 03 Dec 2015 16:32:12 -0600
 
-pg-admin (0.5.0-1) unstable; urgency=low
+elephaas (0.5.0-1) unstable; urgency=low
 
   * Added new function to retrieve master xlog location.
   * Added new function to get slave sync delay.
@@ -12,14 +12,14 @@ pg-admin (0.5.0-1) unstable; urgency=low
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Mon, 23 Nov 2015 15:07:43 -0600
 
-pg-admin (0.4.0-1) unstable; urgency=low
+elephaas (0.4.0-1) unstable; urgency=low
 
   * Removed "Auth" menu as LDAP supercedes it.
   * Sped up rsync operation slightly.
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Wed, 18 Nov 2015 10:39:43 -0600
 
-pg-admin (0.3.0-1) unstable; urgency=low
+elephaas (0.3.0-1) unstable; urgency=low
 
   * Only allow to remaster from existing masters.
   * Sort instances by host name and instance name by default.
@@ -29,26 +29,26 @@ pg-admin (0.3.0-1) unstable; urgency=low
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 11 Aug 2015 11:29:14 -0500
 
-pg-admin (0.2.1-1) unstable; urgency=low
+elephaas (0.2.1-1) unstable; urgency=low
 
   * Fixed broken admin searching.
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 28 Jul 2015 11:20:27 -0500
 
-pg-admin (0.2.0-1) unstable; urgency=low
+elephaas (0.2.0-1) unstable; urgency=low
 
   * New admin menu for disaster recovery pairs.
   * Code overhaul to centralize instance management.
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 23 Jul 2015 14:17:57 -0500
 
-pg-admin (0.1.1-1) unstable; urgency=low
+elephaas (0.1.1-1) unstable; urgency=low
 
   * New admin menu for replicas.
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 21 Jul 2015 11:47:20 -0500
 
-pg-admin (0.1.0-1) unstable; urgency=low
+elephaas (0.1.0-1) unstable; urgency=low
 
   * Initial release.
 
