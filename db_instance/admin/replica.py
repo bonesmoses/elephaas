@@ -28,7 +28,7 @@ class DBReplicaAdmin(DBInstanceAdmin):
         This virtual view shouldn't allow deep editing of model items
         """
         super(DBReplicaAdmin, self).__init__(*args, **kwargs)
-        self.list_display_links = (None, )
+        self.list_display_links = ()
 
 
     def get_actions(self, request):

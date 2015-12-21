@@ -49,7 +49,7 @@ class DBInstance(models.Model):
     environment = models.CharField('Environment', max_length=10, choices=ENVIRONMENTS)
 
     db_host = models.CharField('DB Host', max_length=40)
-    db_port = models.IntegerField('DB Port', max_length=5, default=db_settings['PORT'])
+    db_port = models.IntegerField('DB Port', default=db_settings['PORT'])
     db_user = models.CharField('DB User', max_length=40, default=db_settings['USER'])
     version = models.CharField('PG Version', max_length=10, default=db_settings['PORT'], blank=True)
     pgdata = models.CharField('DB Path', max_length=200)

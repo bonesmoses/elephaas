@@ -32,15 +32,31 @@ SECRET_KEY = ''
 # SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = False
-TEMPLATE_DEBUG = False
+#TEMPLATE_DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
-TEMPLATE_DIRS = (
-    os.path.join(os.path.dirname(__file__), 'templates')
-)
+#TEMPLATE_DIRS = (
+#    os.path.join(os.path.dirname(__file__), 'templates'),
+#)
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': ['elephaas/templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -51,6 +67,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'db_user',
     'db_instance',
+    'haas',
 )
 
 MIDDLEWARE_CLASSES = (
