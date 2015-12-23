@@ -28,7 +28,7 @@ After installing the necessary parts:
 
  ```bash
  cd /opt/elephaas
- python manage.py syncdb
+ python manage.py migrate
  ```
 
 
