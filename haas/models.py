@@ -60,3 +60,28 @@ class Herd(models.Model):
 
     def __unicode__(self):
         return self.herd_name
+
+
+class Server(models.Model):
+    """
+    Define a Postgres Database Server
+
+    Since we're trying to abstract servers away from the process, this menu
+    mainly allows the server to exist as a medium. We want to encourage
+    distributing a public SSH key to let the tool simply seize control.
+    """
+
+    server_id = models.AutoField(primary_key=True)
+    environment = models.ForeignKey('Environment', on_delete = models.SET_NULL, null=True)
+    hostname = models.CharField('Host Name', max_length=40)
+    created_dt = models.DateField()
+    modified_dt = models.DateField()
+
+    class Meta:
+        verbose_name = 'Server'
+        db_table = 'ele_server'
+        ordering = ['hostname',]
+
+    def __unicode__(self):
+        return self.hostname
+
