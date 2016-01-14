@@ -70,7 +70,7 @@ class PGUtility():
         :raise: Exception output obtained from STDERR, if any.
         """
 
-        return execute_remote_cmd(self.instance.db_host, command)
+        return execute_remote_cmd(self.instance.server.hostname, command)
 
 
     def receive_file(self, source, dest):
