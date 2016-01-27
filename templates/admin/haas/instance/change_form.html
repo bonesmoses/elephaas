@@ -9,7 +9,7 @@
     var masterSel = $('#id_master');
 
     serverOpts = serverSel.find("option").clone();
-    masterOpts = masterSel.find("option").clone();
+    //masterOpts = masterSel.find("option").clone();
 
     herdSel.change( function (event) {
         if ($(this).val() == '')
@@ -22,12 +22,12 @@
             return $(this).text().indexOf(' - ' + env) != -1;
         }).clone();
         serverSel.empty().append(matches);
-
+/*
         matches = masterOpts.filter(function () {
             return $(this).text().indexOf(' - ' + env) != -1;
         }).clone();
         masterSel.empty().append(matches);
-
+*/
     });
 
 }) (django.jQuery);

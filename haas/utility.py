@@ -27,6 +27,8 @@ def execute_remote_cmd(hostname, command):
 
     if err:
         raise Exception(err)
+    elif stdout.channel.recv_exit_status() > 0:
+        raise Exception(stdout.read())
 
     return stdout.read()
 
@@ -73,6 +75,40 @@ class PGUtility():
         return execute_remote_cmd(self.instance.server.hostname, command)
 
 
+    def __build_stream_config(self):
+        """
+        Build a recovery.conf for the master of this instance.
+
+        For a streaming replica in Postgres to work, it must have a
+        recovery.conf file detailing the upstream master connection
+        parameters. This method ensures the file follows standard
+        conventions across this application.
+
+        :raises: Exception in case of recovery.conf upload problems.
+        """
+
+        inst = self.instance
+        ver = '.'.join(inst.version.split('.')[:2])
+
+        # Write out a local recovery.conf we can transmit to the instance.
+        # Doing it this way is a lot easier than trying to escape everything
+        # and sending it via SSH commands.
+
+        usedir = inst.local_pgdata or inst.herd.pgdata
+        rec_file = tempfile.NamedTemporaryFile(bufsize=0)
+        rec_path = os.path.join(usedir, 'recovery.conf')
+
+        info = 'user=%s host=%s port=%s application_name=%s' % (
+            'replication', inst.master.server.hostname, inst.herd.db_port,
+            inst.herd.herd_name + '_' + inst.server.hostname
+        )
+
+        rec_file.write("standby_mode = 'on'\n")
+        rec_file.write("primary_conninfo = '%s'\n" % info)
+        self.receive_file(rec_file.name, rec_path)
+        rec_file.close()
+
+
     def receive_file(self, source, dest):
         """
         Transmit a file to a remote host via SSH
@@ -89,7 +125,7 @@ class PGUtility():
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(self.instance.db_host, username='postgres')
+        client.connect(self.instance.server.hostname, username='postgres')
         sftp = client.open_sftp()
         sftp.put(source, dest)
         sftp.close()
@@ -108,7 +144,7 @@ class PGUtility():
         if not inst.is_online:
             ver = '.'.join(inst.version.split('.')[:2])
             self.__run_cmd(
-                'pg_ctlcluster %s %s start' % (ver, inst.instance)
+                'pg_ctlcluster %s %s start' % (ver, inst.herd.herd_name)
             )
 
         inst.is_online = True
@@ -188,7 +224,7 @@ class PGUtility():
         if inst.is_online:
             ver = '.'.join(inst.version.split('.')[:2])
             self.__run_cmd(
-                'pg_ctlcluster %s %s stop -m fast' % (ver, inst.instance)
+                'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.herd_name)
             )
 
         inst.is_online = False
@@ -234,7 +270,10 @@ class PGUtility():
         # only transfer whole files to avoid excessive reads on the slave
         # which can slow down the transfers.
 
-        self.stop()
+        if inst.is_online:
+            self.stop()
+
+        self.__build_stream_config()
 
         sync = 'rsync -a --rsh=ssh -W --delete'
         sync += ' --exclude=recovery.conf'
@@ -242,8 +281,11 @@ class PGUtility():
         sync += ' --exclude=postmaster.*'
         sync += ' postgres@%s:%s/ %s'
 
+        primary_dir = inst.master.local_pgdata or inst.herd.pgdata
+        replica_dir = inst.local_pgdata or inst.herd.pgdata
+
         self.__run_cmd(sync % (
-            inst.master.db_host, inst.master.pgdata, inst.pgdata
+            inst.master.server.hostname, primary_dir, replica_dir
         ))
 
         # Handle the pg_xlog data separately so we get all of the upstream
@@ -255,7 +297,7 @@ class PGUtility():
         sync += ' postgres@%s:%s/pg_xlog %s'
 
         self.__run_cmd(sync % (
-            inst.master.db_host, inst.master.pgdata, inst.pgdata
+            inst.master.server.hostname, primary_dir, replica_dir
         ))
 
         # Once the process is complete, attempt to start the instance. Again,
@@ -308,36 +350,18 @@ class PGUtility():
         :raises: Exception if the instance could not be promoted.
         """
 
-        inst = self.instance
-        ver = '.'.join(inst.version.split('.')[:2])
+        # Even if this was a master host at one point, it's a replica now.
+        # Make sure we record the new master and set the slave attribute.
 
-        # Write out a local recovery.conf we can transmit to the instance.
-        # Doing it this way is a lot easier than trying to escape everything
-        # and sending it via SSH commands.
-
-        rec_file = tempfile.NamedTemporaryFile(bufsize=0)
-        rec_path = os.path.join(inst.pgdata, 'recovery.conf')
-
-        info = 'user=%s host=%s port=%s application_name=%s' % (
-            'replication', master.db_host, master.db_port,
-            inst.db_host + '_' + inst.instance
-        )
-
-        rec_file.write("standby_mode = 'on'\n")
-        rec_file.write("primary_conninfo = '%s'\n" % info)
-        self.receive_file(rec_file.name, rec_path)
-        rec_file.close()
+        inst.master = master
+        self.__build_stream_config()
+        inst.save()
 
         # Reload the config. This should cause the slave to follow the new
         # master. This should have some kind of more advanced check, because
         # the pg_ctlcluster command probably won't exit with an error here.
         # For now, we'll just assume it worked.
 
-        self.reload()
+        if inst.is_online:
+            self.reload()
 
-        # Even if this was a master host at one point, it's a replica now.
-        # Make sure we record the new master and set the slave attribute.
-
-        inst.duty = 'slave'
-        inst.master = master
-        inst.save()

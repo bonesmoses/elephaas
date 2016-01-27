@@ -128,6 +128,7 @@ class Instance(models.Model):
     )
     xlog_pos = models.CharField('Current XLOG Position',
         editable=False,
+        null=True,
         max_length=40
     )
     is_online = models.BooleanField('Online', editable=False, default=False)
@@ -136,6 +137,7 @@ class Instance(models.Model):
         on_delete = models.SET_NULL,
         null=True,
         blank=True,
+        editable=False,
         help_text='If this is a replica, the upstream data source.'
     )
 
