@@ -21,7 +21,7 @@ class InstanceAdmin(admin.ModelAdmin):
 
 
     def is_primary(self, instance):
-        return instance.master and False or True
+        return False if instance.master else True
     is_primary.short_description = 'Primary'
     is_primary.boolean = True
 
