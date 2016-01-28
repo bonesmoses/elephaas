@@ -3,6 +3,9 @@ import re
 import paramiko
 import tempfile
 
+from haas.models import Instance
+from django.db.models import Count
+
 __all__ = ['execute_remote_cmd', 'PGUtility']
 
 def execute_remote_cmd(hostname, command):
@@ -322,46 +325,76 @@ class PGUtility():
         ver = '.'.join(inst.version.split('.')[:2])
 
         self.__run_cmd(
-            'pg_ctlcluster %s %s promote' % (ver, inst.instance)
+            'pg_ctlcluster %s %s promote' % (ver, inst.herd.herd_name)
         )
 
-        inst.duty = 'master'
         inst.master = None
         inst.save()
 
 
-    def change_master(self, master):
+    def demote(self):
         """
-        Assign a new upstream master to this instance
+        Revert a primary to replica status
 
-        Master assignment in this context means two things:
+        Demoting an instance means:
         
-        1. A new recovery.conf is written with streaming connection info.
-        2. A configuration reload is issued.
+        * Stopping the instance, if running.
+        * Assigning it to another primary.
+        * Syncing the contents.
+        * Starting it up.
+        
+        We're basically just chaining creation of recovery.conf and calling
+        master_sync. Before we do that, we need to find the primary with
+        subscribers. We do this mostly because this tool doesn't yet
+        support replica chaining.
 
-        The assumption is that the master and slave are already compatible or
-        newly synchronized. If this is not the case, this instance will be
-        stopped for manual intervention. The caller is welcome to invoke
-        master_sync to ensure the master reassignment is enforced, but we
-        don't recommend this approach as a single operation.
-
-        :param master: Django DBInstance model of upstream master to assign.
-
-        :raises: Exception if the instance could not be promoted.
+        :raises: Exception if the instance could not be demoted.
         """
 
-        # Even if this was a master host at one point, it's a replica now.
-        # Make sure we record the new master and set the slave attribute.
+        inst = self.instance
 
-        inst.master = master
+        # Before we do *anything*, make sure we're not demoting the only
+        # primary in this herd. That would be extremely bad.
+
+        masters = Instance.objects.exclude(pk = inst.pk).filter(
+            herd_id = inst.herd_id,
+            master_id__isnull=True
+        ).count()
+
+        if masters < 1:
+            raise Exception('Will not demote the last available master.')
+
+        # Now we should find the new master, rebuild the config, and sync
+        # the contents to follow the chosen master. We save first because
+        # the decision was made. If the config or sync failed, we should
+        # try those again separately, or manually.
+
+        self.instance.master = self.get_herd_primary()
+        self.instance.save()
         self.__build_stream_config()
-        inst.save()
+        self.master_sync()
 
-        # Reload the config. This should cause the slave to follow the new
-        # master. This should have some kind of more advanced check, because
-        # the pg_ctlcluster command probably won't exit with an error here.
-        # For now, we'll just assume it worked.
 
-        if inst.is_online:
-            self.reload()
+    def get_herd_primary(self):
+        """
+        Get the primary for the herd of which this instance is a member
+
+        This utility doesn't yet support master chaining. As such, we take
+        our current herd and find all masters and their subscriber counts.
+        This guarantees at least one result, provided a primary exists.
+        Once we have that, we only need the top result if multiple rows
+        match. This ensures newly promoted replicas don't get assigned
+        as masters to new instances. At least, not accidentally.
+
+        :return: An instance object for this herd's primary instance.
+        """
+
+        inst = self.instance
+
+        master = Instance.objects.exclude(pk = inst.pk).filter(
+            herd_id = inst.herd_id,
+            master_id__isnull=True
+        ).annotate(sub_count=Count('master_id')).order_by('-sub_count')[0]
+
+        return master
 

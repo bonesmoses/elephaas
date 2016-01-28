@@ -10,7 +10,9 @@ __all__ = ['InstanceAdmin']
 
 
 class InstanceAdmin(admin.ModelAdmin):
-    actions = ['stop_instances', 'start_instances', 'rebuild_instances']
+    actions = ['stop_instances', 'start_instances', 'rebuild_instances',
+        'promote_instances', 'demote_instances'
+    ]
     exclude = ('created_dt', 'modified_dt')
     list_display = ('herd', 'get_server', 'get_port', 'version', 
         'is_primary', 'is_online'
@@ -96,8 +98,8 @@ class InstanceAdmin(admin.ModelAdmin):
         # become our master.
 
         try:
-            primary = Instance.objects.get(herd_id = obj.herd, master_id = None)
-            obj.master = primary
+            util = PGUtility(obj)
+            obj.master = util.get_herd_primary()
             obj.version = primary.version
         except:
             pass
@@ -197,7 +199,7 @@ class InstanceAdmin(admin.ModelAdmin):
         # Now go to the confirmation form. It's very basic, and only serves
         # to disrupt the process and avoid accidental rebuilds.
 
-        return render(request, 'admin/haas/instance/rebuild_confirmation.html', 
+        return render(request, 'admin/haas/instance/rebuild.html', 
                 {'queryset' : queryset,
                  'opts': self.model._meta,
                  'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
@@ -205,6 +207,135 @@ class InstanceAdmin(admin.ModelAdmin):
         )
 
     rebuild_instances.short_description = "Rebuild Selected Replicas"
+
+
+    def promote_instances(self, request, queryset):
+        """
+        Promote transmitted PostgreSQL replication instances to master state
+        """
+
+        if request.POST.get('post') == 'yes':
+
+            for inst_id in request.POST.getlist(admin.ACTION_CHECKBOX_NAME):
+                inst = Instance.objects.get(pk=inst_id)
+
+                try:
+                    util = PGUtility(inst)
+                    util.promote()
+
+                except Exception, e:
+                    self.message_user(request, "%s : %s" % (e, inst), messages.ERROR)
+                    continue
+
+                self.message_user(request, "%s promoted to read/write!" % inst)
+            return
+
+        # Now go to the confirmation form. It's very basic, and only serves
+        # to disrupt the process and avoid accidental promotions that would
+        # necessitate a resync.
+
+        queryset = queryset.exclude(master_id__isnull=True)
+
+        if queryset.count() < 1:
+            self.message_user(request, "No valid replicas to promte!", messages.WARNING)
+            return
+
+        return render(request, 'admin/haas/instance/promote.html', 
+                {'queryset' : queryset,
+                 'opts': self.model._meta,
+                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                }
+        )
+
+    promote_instances.short_description = "Promote Selected Replicas"
+
+
+    def demote_instances(self, request, queryset):
+        """
+        Demote selected instances back into streaming herd replicas
+
+        Given a node is a primary, meaning at one point it was promoted,
+        we probably eventually want to convert it back. This encapsulates
+        that process and works for several selected primaries.
+        
+        Instances which are the only primary in the herd are automatically
+        pruned from the select list. This check is performed both before 
+        *and* after the confirmation form, in case the only masters from
+        a single herd are all selected.
+        """
+
+        if request.POST.get('post') == 'yes':
+
+            # Iterate through every submitted instance and call the utility
+            # to demote each. It should perform the check logic that ensures
+            # we always have at least one remaining master in the herd.
+
+            for inst_id in request.POST.getlist(admin.ACTION_CHECKBOX_NAME):
+                inst = Instance.objects.get(pk=inst_id)
+
+                #util = PGUtility(inst)
+                #result = util.demote()
+
+                try:
+                    util = PGUtility(inst)
+                    result = util.demote()
+
+                except Exception, e:
+                    self.message_user(request, "%s : %s" % (e, inst), messages.ERROR)
+                    continue
+
+                host=inst.server.hostname
+                herd=inst.herd
+                self.message_user(request, "%s demoted to %s replica!" % (host, herd))
+            return
+
+        # For the confirmation piece, we should remove any streaming replicas,
+        # because they can't be demoted further.
+
+        queryset = queryset.exclude(master_id__isnull=False)
+
+        # Further, we should remove any primary instances that still have
+        # active subscribers. This menu option is not meant for DR failover
+        # work. We can use the same loop to verify that at least one other
+        # primary would exist if we demoted this one.
+
+        for inst in queryset:
+            replicas = Instance.objects.filter(master_id = inst.pk).count()
+
+            if replicas > 0:
+                self.message_user(request, "%s has active subscribers!" % 
+                    inst.server.hostname,
+                    messages.WARNING
+                )
+                queryset = queryset.exclude(pk=inst.pk)
+
+            masters = Instance.objects.exclude(pk = inst.pk).filter(
+                herd_id = inst.herd_id,
+                master_id__isnull=True
+            ).count()
+
+            if masters < 1:
+                self.message_user(request, "%s herd needs at least one master!" % 
+                    inst.herd,
+                    messages.WARNING
+                )
+                queryset = queryset.exclude(pk=inst.pk)
+
+        # If after all our prerequisite checks, there are no results, just go
+        # back to the previous menu and complain that there was nothing to do.
+
+        if queryset.count() < 1:
+            self.message_user(request, "No valid instances to demote!", messages.WARNING)
+            return
+
+        return render(request, 'admin/haas/instance/demote.html', 
+                {'queryset' : queryset,
+                 'opts': self.model._meta,
+                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                }
+        )
+
+    demote_instances.short_description = "Demote Selected Primary Instances"
 
 
 admin.site.register(Instance, InstanceAdmin)
