@@ -154,68 +154,6 @@ class PGUtility():
         inst.save()
 
 
-    def get_xlog_location(self):
-        """
-        For a master system, get its current xlog location.
-
-        This is generally only useful when trying to figure out how far
-        behind a replica might be. We use the pg_current_xlog_location
-        function to get this value so it can be sent to any number of
-        slaves to calculate replication drift.
-        
-        :return: A Postgres xlog location or None.
-        """
-
-        inst = self.instance
-
-        if inst.duty != 'master':
-            return None
-
-        try:
-            SQL = "SELECT pg_current_xlog_location()"
-            loc = self.__run_cmd(
-                'psql -At -p %s -c "%s"' % (inst.db_port, SQL)
-            )
-        except Exception:
-            return None
-
-        return loc
-
-
-    def get_sync_lag(self, master_xlog):
-        """
-        For a replica, return how many bytes behind sync is.
-
-        Given an xlog location (presumably obtained from the upstream master)
-        we should ask the slave how far it is from that location. Essentially
-        this means we're wrapping the pg_xlog_location_diff function and
-        using pg_last_xlog_replay_location to calculate the divergence.
-
-        :param master_xlog: Current xlog point as reported by the upstream
-               master system.
-
-        :return: Number of bytes of lag, or None.
-        """
-
-        inst = self.instance
-
-        if inst.duty != 'slave' or master_xlog is None:
-            return None
-
-        try:
-            # Never trust user input. Even if we're the user.
-            master_xlog = re.sub('[^A-Z/0-9]', '', master_xlog)
-
-            SQL = "SELECT pg_xlog_location_diff('%s', pg_last_xlog_replay_location())" % master_xlog
-            bytes_diff = self.__run_cmd(
-                'psql -At -p %s -c "%s"' % (inst.db_port, SQL)
-            )
-        except Exception:
-            return None
-
-        return abs(int(bytes_diff))
-
-
     def stop(self):
         """
         Stop this PostgreSQL instance
@@ -250,7 +188,7 @@ class PGUtility():
 
         ver = '.'.join(inst.version.split('.')[:2])
         self.__run_cmd(
-            'pg_ctlcluster %s %s reload' % (ver, inst.instance)
+            'pg_ctlcluster %s %s reload' % (ver, inst.herd.herd_name)
         )
 
 

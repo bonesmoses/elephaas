@@ -10,16 +10,25 @@ __all__ = ['InstanceAdmin']
 
 
 class InstanceAdmin(admin.ModelAdmin):
-    actions = ['stop_instances', 'start_instances', 'rebuild_instances',
-        'promote_instances', 'demote_instances'
+    actions = ['start_instances', 'stop_instances', 'restart_instances',
+        'reload_instances', 'promote_instances', 'demote_instances',
+        'rebuild_instances',
     ]
     exclude = ('created_dt', 'modified_dt')
     list_display = ('herd', 'get_server', 'get_port', 'version', 
-        'is_primary', 'is_online'
+        'is_primary', 'is_online', 'mb_lag'
     )
     list_filter = ('herd', 'herd__environment', 'is_online', 'version')
     search_fields = ('herd__herd_name', 'server__hostname', 'version')
     readonly_fields = ('master', 'version',)
+
+
+    def mb_lag(self, instance):
+        if instance.master:
+            mypos = instance.xlog_pos or 0
+            masterpos = instance.master.xlog_pos or 0
+            return abs(masterpos - mypos)/1024
+    mb_lag.short_description = 'MB Lag'
 
 
     def is_primary(self, instance):
@@ -83,9 +92,11 @@ class InstanceAdmin(admin.ModelAdmin):
         # The backend monitor on each server will keep this updated, but
         # we might as well bootstrap it now.
 
-        SQL = "SELECT pg_current_xlog_location()"
+        usefunc = 'pg_current_xlog_location()'
         if obj.master:
-            SQL = "SELECT pg_last_xlog_replay_location()"
+            usefunc = 'pg_last_xlog_replay_location()'
+
+        SQL = "SELECT pg_xlog_location_diff(" + usefunc + ", '0/00000000')"
 
         if conn:
             cur = conn.cursor()
@@ -337,6 +348,50 @@ class InstanceAdmin(admin.ModelAdmin):
 
     demote_instances.short_description = "Demote Selected Primary Instances"
 
+
+    def restart_instances(self, request, queryset):
+        """
+        Restart all transmitted PostgreSQL instances
+
+        Basicaly we just call for a fast stop followed by a start. Nothing
+        complicated here. Unlike stop, we don't skip stopped instances, and
+        unline start, we don't skip running ones.
+        """
+
+        for inst in queryset:
+            try:
+                util = PGUtility(inst)
+                util.stop()
+                util.start()
+
+            except Exception, e:
+                self.message_user(request, "%s : %s" % (e, inst), messages.ERROR)
+                continue
+
+            self.message_user(request, "%s restarted!" % inst)
+
+    restart_instances.short_description = "Restart Selected Instances"
+
+
+    def reload_instances(self, request, queryset):
+        """
+        Reload all transmitted PostgreSQL instances
+
+        This is provided as a way of reloading configuration files.
+        """
+
+        for inst in queryset:
+            try:
+                util = PGUtility(inst)
+                util.reload()
+
+            except Exception, e:
+                self.message_user(request, "%s : %s" % (e, inst), messages.ERROR)
+                continue
+
+            self.message_user(request, "%s config files reloaded!" % inst)
+
+    reload_instances.short_description = "Reload Selected Instances"
 
 admin.site.register(Instance, InstanceAdmin)
 
