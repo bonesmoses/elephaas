@@ -128,8 +128,7 @@ class Instance(models.Model):
     )
     xlog_pos = models.IntegerField('Current XLOG Position',
         editable=False,
-        null=True,
-        max_length=40
+        null=True
     )
     is_online = models.BooleanField('Online', editable=False, default=False)
 
@@ -151,3 +150,43 @@ class Instance(models.Model):
 
     def __unicode__(self):
         return self.herd.herd_name + ' - ' + self.herd.environment.env_name
+
+
+
+class DisasterRecovery(models.Model):
+    """
+    Define a Disaster Recovery Virtual
+    
+    In a Postgres context, having a DR system means we start with regular
+    instances with no upstream primary, and then following the chain. A DR
+    candidate is simply an online system that is an active follower of a
+    primary herd leader. For switching between them, the admin system must
+    apply its own criteria.
+
+    This model is simulated through the v_dr_pairs view.
+    """
+
+    instance = models.OneToOneField('Instance',
+        on_delete = models.DO_NOTHING,
+        primary_key=True
+    )
+    herd = models.ForeignKey('Herd', on_delete = models.DO_NOTHING)
+    server = models.ForeignKey('Server', on_delete = models.DO_NOTHING)
+    mb_lag = models.DecimalField('Sync Delay (MB)',
+        max_digits=5, decimal_places=2, null=True
+    )
+    master = models.ForeignKey('self',
+        on_delete = models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+    vhost = models.CharField('Virtual Host',
+        max_length=40,
+        help_text='Virtual host name to identify primary herd member.'
+    )
+
+    class Meta:
+        verbose_name = 'Disaster Recovery Pair'
+        db_table = 'v_dr_pairs'
+        managed = False
+
