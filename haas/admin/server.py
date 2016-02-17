@@ -3,6 +3,7 @@ from django import forms
 
 from haas.models import Server
 from haas.utility import execute_remote_cmd
+from haas.admin.base import HAASAdmin
 
 __all__ = ['ServerAdmin']
 
@@ -26,7 +27,7 @@ class ServerForm(forms.ModelForm):
         return self.cleaned_data['hostname']
 
 
-class ServerAdmin(admin.ModelAdmin):
+class ServerAdmin(HAASAdmin):
     exclude = ('created_dt', 'modified_dt')
     list_display = ('hostname', 'environment')
     list_filter = ('environment',)

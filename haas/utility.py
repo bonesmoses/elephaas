@@ -78,40 +78,6 @@ class PGUtility():
         return execute_remote_cmd(self.instance.server.hostname, command)
 
 
-    def __build_stream_config(self):
-        """
-        Build a recovery.conf for the master of this instance.
-
-        For a streaming replica in Postgres to work, it must have a
-        recovery.conf file detailing the upstream master connection
-        parameters. This method ensures the file follows standard
-        conventions across this application.
-
-        :raises: Exception in case of recovery.conf upload problems.
-        """
-
-        inst = self.instance
-        ver = '.'.join(inst.version.split('.')[:2])
-
-        # Write out a local recovery.conf we can transmit to the instance.
-        # Doing it this way is a lot easier than trying to escape everything
-        # and sending it via SSH commands.
-
-        usedir = inst.local_pgdata or inst.herd.pgdata
-        rec_file = tempfile.NamedTemporaryFile(bufsize=0)
-        rec_path = os.path.join(usedir, 'recovery.conf')
-
-        info = 'user=%s host=%s port=%s application_name=%s' % (
-            'replication', inst.master.server.hostname, inst.herd.db_port,
-            inst.herd.herd_name + '_' + inst.server.hostname
-        )
-
-        rec_file.write("standby_mode = 'on'\n")
-        rec_file.write("primary_conninfo = '%s'\n" % info)
-        self.receive_file(rec_file.name, rec_path)
-        rec_file.close()
-
-
     def receive_file(self, source, dest):
         """
         Transmit a file to a remote host via SSH
@@ -145,10 +111,21 @@ class PGUtility():
         inst = self.instance
 
         if not inst.is_online:
-            ver = '.'.join(inst.version.split('.')[:2])
-            self.__run_cmd(
-                'pg_ctlcluster %s %s start' % (ver, inst.herd.herd_name)
-            )
+            if inst.version:
+                ver = '.'.join(inst.version.split('.')[:2])
+            else:
+                ver = '.'.join(inst.master.version.split('.')[:2])
+
+            # If the metadata isn't up to date and this instance *is* online,
+            # we don't want to error out. Just act like it worked.
+
+            try:
+                self.__run_cmd(
+                    'pg_ctlcluster %s %s start' % (ver, inst.herd.herd_name)
+                )
+            except Exception, e:
+                if not 'already running' in str(e):
+                    raise
 
         inst.is_online = True
         inst.save()
@@ -164,9 +141,17 @@ class PGUtility():
 
         if inst.is_online:
             ver = '.'.join(inst.version.split('.')[:2])
-            self.__run_cmd(
-                'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.herd_name)
-            )
+
+            # If the metadata isn't up to date and this instance *is not*
+            # online, we don't want to error out. Just act like it worked.
+
+            try:
+                self.__run_cmd(
+                    'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.herd_name)
+                )
+            except Exception, e:
+                if not 'not running' in str(e):
+                    raise
 
         inst.is_online = False
         inst.save()
@@ -214,7 +199,7 @@ class PGUtility():
         if inst.is_online:
             self.stop()
 
-        self.__build_stream_config()
+        self.update_stream_config()
 
         sync = 'rsync -a --rsh=ssh -W --delete'
         sync += ' --exclude=recovery.conf'
@@ -275,12 +260,12 @@ class PGUtility():
         Revert a primary to replica status
 
         Demoting an instance means:
-        
+
         * Stopping the instance, if running.
         * Assigning it to another primary.
         * Syncing the contents.
         * Starting it up.
-        
+
         We're basically just chaining creation of recovery.conf and calling
         master_sync. Before we do that, we need to find the primary with
         subscribers. We do this mostly because this tool doesn't yet
@@ -309,7 +294,7 @@ class PGUtility():
 
         self.instance.master = self.get_herd_primary()
         self.instance.save()
-        self.__build_stream_config()
+        self.update_stream_config()
         self.master_sync()
 
 
@@ -331,8 +316,41 @@ class PGUtility():
 
         master = Instance.objects.exclude(pk = inst.pk).filter(
             herd_id = inst.herd_id,
-            master_id__isnull=True
+            master_id__isnull = True
         ).annotate(sub_count=Count('master_id')).order_by('-sub_count')[0]
 
         return master
 
+
+    def update_stream_config(self):
+        """
+        Build a recovery.conf for the master of this instance.
+
+        For a streaming replica in Postgres to work, it must have a
+        recovery.conf file detailing the upstream master connection
+        parameters. This method ensures the file follows standard
+        conventions across this application.
+
+        :raises: Exception in case of recovery.conf upload problems.
+        """
+
+        inst = self.instance
+        ver = '.'.join(inst.version.split('.')[:2])
+
+        # Write out a local recovery.conf we can transmit to the instance.
+        # Doing it this way is a lot easier than trying to escape everything
+        # and sending it via SSH commands.
+
+        usedir = inst.local_pgdata or inst.herd.pgdata
+        rec_file = tempfile.NamedTemporaryFile(bufsize=0)
+        rec_path = os.path.join(usedir, 'recovery.conf')
+
+        info = 'user=%s host=%s port=%s application_name=%s' % (
+            'replication', inst.master.server.hostname, inst.herd.db_port,
+            inst.herd.herd_name + '_' + inst.server.hostname
+        )
+
+        rec_file.write("standby_mode = 'on'\n")
+        rec_file.write("primary_conninfo = '%s'\n" % info)
+        self.receive_file(rec_file.name, rec_path)
+        rec_file.close()

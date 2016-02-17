@@ -1,11 +1,20 @@
-from django.contrib import admin
+import os
+import dns.query
+import dns.resolver
+import dns.update
+
+from time import sleep
+
+from django.contrib import admin, messages
 from django.shortcuts import render
 
-from haas.models import DisasterRecovery
+from haas.models import DisasterRecovery, Instance
+from haas.admin.base import HAASAdmin
+from haas.utility import PGUtility
 
 __all__ = ['DRAdmin']
 
-class DRAdmin(admin.ModelAdmin):
+class DRAdmin(HAASAdmin):
     actions = ['failover_pair',]
     list_display = ('herd', 'container', 'mb_lag', 'vhost')
 
@@ -50,6 +59,9 @@ class DRAdmin(admin.ModelAdmin):
            new follower is still out of sync with the new leader. This will
            require a separate node rebuild step to rectify.
         4. Move the declared virtual host to the new leader.
+        5. Reassign all replicas to follow the new leader. We do this last
+           because it relies on DNS propagation, and pushing a reload after
+           that step implies a reconnection.
         """
 
         # Go to the confirmation form. As usual, this is fairly important,
@@ -58,7 +70,7 @@ class DRAdmin(admin.ModelAdmin):
 
         if request.POST.get('post') != 'yes':
 
-            return render(request, 'admin/haas/dr/failover.html', 
+            return render(request, 'admin/haas/disasterrecovery/failover.html', 
                     {'queryset' : queryset,
                      'opts': self.model._meta,
                      'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
@@ -68,55 +80,78 @@ class DRAdmin(admin.ModelAdmin):
         # Since the form has been submitted, start swapping DR pairs.
 
         for dr_id in request.POST.getlist(admin.ACTION_CHECKBOX_NAME):
-            dbdr = DisasterRecovery.objects.get(pk=dr_id)
+            newb = Instance.objects.get(pk=dr_id)
+            sage = newb.master
+
+            # Start with the transfer: stop -> promote -> alter.
+            # Add in a short pause between to allow xlog propagation.
 
             try:
-                new_leader = PGUtility(dbdr.instance)
+                sage_util = PGUtility(sage)
+                newb_util = PGUtility(newb)
 
-                # We begin by stopping the primary and then waiting a few
-                # seconds to help the secondary catch up. Then we promote
-                # the secondary itself. At this point, the database is
-                # available, but we need to change the old primary to use
-                # the secondary as its new master when it's rebuilt.
-
-                primary.stop()
+                sage_util.stop()
                 sleep(5)
-                secondary.promote()
-                primary.change_master(dbdr.secondary)
+                newb_util.promote()
 
-                # Now update the DNS. We'll just use the basic dnspython
-                # module and load it with nameserver defaults. That should
-                # be more than enough to propagate this change.
+                sage.master = newb
+                sage.save()
 
+            except Exception, e:
+                self.message_user(request,
+                    "%s : %s" % (e, newb), messages.ERROR
+                )
+                continue
+
+            # Now update the DNS. We'll just use the basic dnspython
+            # module and load it with nameserver defaults. That should
+            # be more than enough to propagate this change.
+
+            try:
                 def_dns = dns.resolver.get_default_resolver()
 
                 new_dns = dns.update.Update(str(def_dns.domain).rstrip('.'))
-                new_dns.delete(str(dbdr.vhost), 'cname')
+                new_dns.delete(str(newb.herd.vhost), 'cname')
                 new_dns.add(
-                    str(dbdr.vhost), '300', 'cname', str(dbdr.secondary.db_host)
+                    str(newb.herd.vhost), '300', 'cname',
+                    str(newb.server.hostname)
                 )
 
                 for ns in def_dns.nameservers:
                     dns.query.tcp(new_dns, ns)
 
-                # Now swap the primary and secondary within the DBDR pair
-                # itself. This maintains the DR pair relationship, though
-                # it has been switched for the time being.
+            except Exception, e:
+                self.message_user(request,
+                    "%s : %s" % (e, newb), messages.ERROR
+                )
+                continue
 
-                temp = dbdr.secondary
-                dbdr.secondary = dbdr.primary
-                dbdr.primary = temp
-                dbdr.in_sync = False
-                dbdr.save()
+            # Now we should get the list of all replica instances in this
+            # herd, which should include the old primary. We just need to
+            # update the recovery.conf file and reload the instance.
+
+            try:
+                herd = Instance.objects.filter(
+                    master_id__isnull = False,
+                    herd_id = newb.herd_id
+                )
+
+                for member in herd:
+                    member.master = newb
+                    member.save()
+
+                    util = PGUtility(member)
+                    util.update_stream_config()
+                    util.reload()                
 
             except Exception, e:
                 self.message_user(request,
-                    "%s : %s" % (e, dbdr), messages.ERROR
+                    "%s : %s" % (e, newb), messages.ERROR
                 )
                 continue
 
             self.message_user(request,
-                "%s failed over to %s!" % (dbdr, dbdr.primary)
+                "%s now active on %s!" % (newb.herd, newb.server.hostname)
             )
 
     failover_pair.short_description = "Fail Over to Listed Replica"

@@ -5,11 +5,12 @@ import psycopg2
 
 from haas.models import Instance
 from haas.utility import execute_remote_cmd, PGUtility
+from haas.admin.base import HAASAdmin
 
 __all__ = ['InstanceAdmin']
 
 
-class InstanceAdmin(admin.ModelAdmin):
+class InstanceAdmin(HAASAdmin):
     actions = ['start_instances', 'stop_instances', 'restart_instances',
         'reload_instances', 'promote_instances', 'demote_instances',
         'rebuild_instances',
