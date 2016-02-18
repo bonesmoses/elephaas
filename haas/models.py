@@ -101,7 +101,10 @@ class Server(models.Model):
         ordering = ['hostname',]
 
     def __unicode__(self):
-        return self.hostname + ' - ' + self.environment.env_name
+        if self.environment:
+            return self.hostname + ' - ' + self.environment.env_name
+        else:
+            return self.hostname
 
 
 class Instance(models.Model):
@@ -150,7 +153,6 @@ class Instance(models.Model):
 
     def __unicode__(self):
         return self.herd.herd_name + ' - ' + self.herd.environment.env_name
-
 
 
 class DisasterRecovery(models.Model):
