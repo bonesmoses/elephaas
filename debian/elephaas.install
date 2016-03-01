@@ -1,4 +1,3 @@
-db_instance opt/elephaas
 elephaas opt/elephaas
 haas opt/elephaas
 static opt/elephaas

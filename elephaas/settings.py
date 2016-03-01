@@ -67,8 +67,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'db_user',
-    'db_instance',
     'haas',
 )
 

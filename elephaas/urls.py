@@ -14,5 +14,4 @@ admin.site.unregister(Group)
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^password/', include('db_user.urls', namespace="db_user")),
 ]
