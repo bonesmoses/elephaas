@@ -1,3 +1,9 @@
+elephaas (0.7.0-1) unstable; urgency=low
+
+  * New revision for Herd As A Service design.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 01 Mar 2016 14:02:12 -0600
+
 elephaas (0.6.0-1) unstable; urgency=low
 
   * Revise rsync to work in two parts to prevent xlog cycling during sync.

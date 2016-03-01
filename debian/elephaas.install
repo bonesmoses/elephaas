@@ -1,5 +1,7 @@
 db_instance opt/elephaas
-db_user opt/elephaas
 elephaas opt/elephaas
+haas opt/elephaas
 static opt/elephaas
+sql opt/elephaas
+templates opt/elephaas
 manage.py opt/elephaas
