@@ -1,3 +1,10 @@
+elephaas (0.8.0-1) unstable; urgency=low
+
+  * For SYS-29771, added missing help menus.
+  * For SYS-29774, added configuration file sync.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 03 Mar 2016 10:04:32 -0600
+
 elephaas (0.7.0-1) unstable; urgency=low
 
   * New revision for Herd As A Service design.

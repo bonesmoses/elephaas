@@ -131,6 +131,37 @@ class PGUtility():
         inst.save()
 
 
+    def start_backup(self):
+        """
+        Put a running Postgres instance in backup mode.
+        
+        This function uses a fast backup start, causing an immediate
+        checkpoint. This may cause this function to return after a long pause,
+        but this is due to the pg_ctl command waiting for the checkpoint to
+        complete.
+
+        This function also uses an ssh connection since that method should
+        "always" work without some specialized database superuser.
+
+        :raises: Exception backup mode had problems starting.
+        """
+
+        inst = self.instance
+
+        if not inst.is_online:
+            return
+
+        try:
+            port = inst.herd.db_port
+            query = "SELECT pg_start_backup('ElepHaaS', true)"
+            self.__run_cmd(
+                'psql -p %d -c "%s" postgres' % (port, query)
+            )
+        except Exception, e:
+            if not 'not connect' in str(e) and not 'NOTICE:' in str(e):
+                raise
+
+
     def stop(self):
         """
         Stop this PostgreSQL instance
@@ -150,11 +181,42 @@ class PGUtility():
                     'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.herd_name)
                 )
             except Exception, e:
-                if not 'not running' in str(e):
+                if not 'not running' in str(e) and not 'not exist' in str(e):
                     raise
 
         inst.is_online = False
         inst.save()
+
+
+    def stop_backup(self):
+        """
+        Take a running Postgres instance out of backup mode.
+        
+        This function is the analog of start_backup. In Postgres, this simply
+        stops the archive log labeling and rotates xlog files generated after
+        start_backup was called. This ensures all xlog files to follow the
+        master are transferred as a group.
+
+        This function also uses an ssh connection since that method should
+        "always" work without some specialized database superuser.
+
+        :raises: Exception backup mode had problems stopping.
+        """
+
+        inst = self.instance
+
+        if not inst.is_online:
+            return
+
+        try:
+            port = inst.herd.db_port
+            query = 'SELECT pg_stop_backup()'
+            self.__run_cmd(
+                'psql -p %d -c "%s" postgres' % (port, query)
+            )
+        except Exception, e:
+            if not 'not connect' in str(e) and not 'NOTICE:' in str(e):
+                raise
 
 
     def reload(self):
@@ -185,6 +247,10 @@ class PGUtility():
         a master it might be subscribed to. If this function is called, the
         caller wants us to replace the slave with the contents of the
         master, presumably because they are out of sync.
+        
+        We also put the upstream master in backup mode for safe "backup"
+        purposes. This ensures the replication stream is as fresh as possible
+        since a checkpoint took place before the sync started.
 
         :raises: Exception if the instance could not be synchronized.
         """
@@ -199,19 +265,44 @@ class PGUtility():
         if inst.is_online:
             self.stop()
 
-        self.update_stream_config()
+        # Before starting the sync, we need to put the master into backup mode.
 
-        sync = 'rsync -a --rsh=ssh -W --delete'
+        master = PGUtility(inst.master)
+
+        xlog_mask = os.path.join('pg_xlog', '*')
+
+        sync = 'rsync -K -a --rsh=ssh -W --delete'
         sync += ' --exclude=recovery.conf'
-        sync += ' --exclude=pg_xlog/*'
+        sync += ' --exclude=%s'
         sync += ' --exclude=postmaster.*'
-        sync += ' postgres@%s:%s/ %s'
+        sync += ' postgres@%s:%s %s'
 
         primary_dir = inst.master.local_pgdata or inst.herd.pgdata
         replica_dir = inst.local_pgdata or inst.herd.pgdata
 
+        master.start_backup()
+
         self.__run_cmd(sync % (
-            inst.master.server.hostname, primary_dir, replica_dir
+            xlog_mask, inst.master.server.hostname, primary_dir, 
+            os.path.dirname(replica_dir)
+        ))
+
+        master.stop_backup()
+
+        self.update_stream_config()
+
+        # Include config files. The server might not be in configuration
+        # management yet, but still needs them to run.
+
+        ver = '.'.join(inst.version.split('.')[:2])
+        conf_dir = os.path.join(
+            os.sep, 'etc', 'postgresql', ver, inst.herd.herd_name
+        )
+
+        sync = 'rsync -a --rsh=ssh postgres@%s:%s %s'
+
+        self.__run_cmd(sync % (
+            inst.master.server.hostname, conf_dir, os.path.dirname(conf_dir)
         ))
 
         # Handle the pg_xlog data separately so we get all of the upstream
@@ -219,11 +310,13 @@ class PGUtility():
         # prevents rsync from complaining about missing files since xlog files
         # rotate frequently.
 
+        xlog_dir = os.path.join(primary_dir, 'pg_xlog')
+
         sync = 'rsync -a --rsh=ssh -W --delete'
-        sync += ' postgres@%s:%s/pg_xlog %s'
+        sync += ' postgres@%s:%s %s'
 
         self.__run_cmd(sync % (
-            inst.master.server.hostname, primary_dir, replica_dir
+            inst.master.server.hostname, xlog_dir, replica_dir
         ))
 
         # Once the process is complete, attempt to start the instance. Again,

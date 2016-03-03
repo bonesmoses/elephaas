@@ -1,5 +1,14 @@
 {% extends "admin/haas/help.html" %}
 
 {% block content %}
-TBA
+<h1>What is a Herd?</h1>
+
+<p>The traditional mascot of Postgres is an elephant. Since elephants travel in herds, imagine a  grouping of related Postgres instances as a single entity along these lines. In this context, a herd has a single leader (the primary) for several followers (the replicas).</p>
+
+<p>For the purposes of this utility, a herd is a name given to these groupings. So long as the label differs, herds can contain any number of instances.</p>
+
+<h1>Example</h1>
+
+<p>Say we have a <b>trading</b> instance that's small and meant to be widely distributed, and an <b>execution</b> instance that's a large monolith. As a herd, trading is deployed on six server containers, which are all subscribed to a seventh. The execution herd, being much larger, has only the leader and a single follower. These are functionally distinct groupings, visualized by the herd name.</p>
+
 {% endblock %}

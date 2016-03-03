@@ -3,7 +3,7 @@
 {% block content %}
 <h1>What is a Disaster Recovery Pair?</h1>
 
-<p></p>In the context of a Postgres Herd, there is no such thing as a simple pair of servers. Since a herd follows a leader, we use a ranking methodology to provide meaning to certain replicas. In this case, a "pair" can be seen as the herd leader (the primary instance representing the herd) and a replica with the following attributes:</p>
+<p>In the context of a Postgres Herd, there is no such thing as a simple pair of servers. Since a herd follows a leader, we use a ranking methodology to provide meaning to certain replicas. In this case, a "pair" can be seen as the herd leader (the primary instance representing the herd) and a replica with the following attributes:</p>
 
 <ul>
     <li>A replica instance which is currently online.</li>
@@ -23,6 +23,6 @@
     <li>All other existing herd members are modified to recognize <b>alternate</b> as the new leader. Configuration files are altered and reloaded to achieve this change.</li>
     <li>The previous leader is subscribed as as a new follower to <b>alternate</b>, but is left in an offline state to prevent potential data loss.</li>
 </ol>
-{% endblock %}
 
-Since the old leader is left offline, it may be used as an emergency data source in case the failover encountered problems of some kind. When its container is ready for reactivation, there is a specific menu action designed to fully synchronize it with the new herd leader. Otherwise, it will be ignored.
+<p>Since the old leader is left offline, it may be used as an emergency data source in case the failover encountered problems of some kind. When its container is ready for reactivation, there is a specific menu action designed to fully synchronize it with the new herd leader. Otherwise, it will be ignored.</p>
+{% endblock %}
