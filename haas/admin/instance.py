@@ -29,7 +29,7 @@ class InstanceAdmin(HAASAdmin):
         if instance.master:
             mypos = instance.xlog_pos or 0
             masterpos = instance.master.xlog_pos or 0
-            return abs(masterpos - mypos)/1024
+            return round(abs(masterpos - mypos) / 1024.0 / 1024.0, 2)
     mb_lag.short_description = 'MB Lag'
 
 
