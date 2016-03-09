@@ -2,6 +2,7 @@ from django.contrib import admin, messages
 from django.shortcuts import render
 
 import psycopg2
+import socket
 
 from haas.models import Instance
 from haas.utility import execute_remote_cmd, PGUtility
@@ -63,46 +64,22 @@ class InstanceAdmin(HAASAdmin):
           * xlog_pos
         """
 
-        conn = None
-
         # First, check the online status. We want this to be as fresh as
         # possible, so we might as well grab it now.
 
-        try:
-            conn = psycopg2.connect(
-                host = obj.server.hostname, port = obj.herd.db_port,
-                database = 'postgres', user = 'postgres'
-            )
-            if conn:
-                obj.is_online = True
-        except:
-            obj.is_online = False
+        obj.is_online = False
 
-        # Now, try to get the database version from the instance.
-        # If we can't get the version and this is a replica, set the
-        # version to the value used in the primary node.
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        check = sock.connect_ex((obj.server.hostname, obj.herd.db_port))
 
-        if conn:
-            cur = conn.cursor()
-            cur.execute("SELECT substring(version() from '[\d.]+')")
-            obj.version = cur.fetchone()[0]
-        elif obj.master:
-            obj.version = obj.master.version
+        if check == 0:
+            obj.is_online = True
 
-        # Now we can get the status of the transaction log position.
-        # The backend monitor on each server will keep this updated, but
-        # we might as well bootstrap it now.
+        # If this instance has a master, we can inherit the Postgres
+        # version from it.
 
-        usefunc = 'pg_current_xlog_location()'
         if obj.master:
-            usefunc = 'pg_last_xlog_replay_location()'
-
-        SQL = "SELECT pg_xlog_location_diff(" + usefunc + ", '0/00000000')"
-
-        if conn:
-            cur = conn.cursor()
-            cur.execute(SQL)
-            obj.xlog_pos = cur.fetchone()[0]
+            obj.version = obj.master.version
 
         # Then, since herds are organized such that each herd follows a single
         # primary node, we can auto-declare that this is a replica or not.
