@@ -44,10 +44,15 @@ class Herd(models.Model):
         on_delete = models.SET_NULL,
         null=True
     )
-    herd_name = models.CharField('Herd Name',
+    base_name = models.CharField('Instance',
         max_length=40,
         help_text='Used to identify this herd, and for CLI tools like' +
-            ' pg_ctlcluster.'
+            ' pg_ctlcluster and the underlying OS.'
+    )
+    herd_name = models.CharField('Herd Name',
+        max_length=40,
+        help_text='Logical name for the herd, so multiple similar herds' +
+            ' can occupy the same environment.'
     )
     herd_descr = models.TextField('Long Description',
         max_length=2000,

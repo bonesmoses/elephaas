@@ -1,3 +1,9 @@
+elephaas (0.9.0-1) unstable; urgency=low
+
+  * For SYS-29903, added base_name representation for OS use.
+
+ -- Shaun Thomas <sthomas@optionshouse.com>  Wed, 09 Mar 2016 11:13:43 -0600
+
 elephaas (0.8.0-1) unstable; urgency=low
 
   * For SYS-29771, added missing help menus.

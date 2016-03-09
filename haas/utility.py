@@ -2,6 +2,7 @@ import os
 import re
 import paramiko
 import tempfile
+import time
 
 from haas.models import Instance
 from django.db.models import Count
@@ -121,7 +122,7 @@ class PGUtility():
 
             try:
                 self.__run_cmd(
-                    'pg_ctlcluster %s %s start' % (ver, inst.herd.herd_name)
+                    'pg_ctlcluster %s %s start' % (ver, inst.herd.base_name)
                 )
             except Exception, e:
                 if not 'already running' in str(e):
@@ -178,7 +179,7 @@ class PGUtility():
 
             try:
                 self.__run_cmd(
-                    'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.herd_name)
+                    'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.base_name)
                 )
             except Exception, e:
                 if not 'not running' in str(e) and not 'not exist' in str(e):
@@ -235,7 +236,7 @@ class PGUtility():
 
         ver = '.'.join(inst.version.split('.')[:2])
         self.__run_cmd(
-            'pg_ctlcluster %s %s reload' % (ver, inst.herd.herd_name)
+            'pg_ctlcluster %s %s reload' % (ver, inst.herd.base_name)
         )
 
 
@@ -296,7 +297,7 @@ class PGUtility():
 
         ver = '.'.join(inst.version.split('.')[:2])
         conf_dir = os.path.join(
-            os.sep, 'etc', 'postgresql', ver, inst.herd.herd_name
+            os.sep, 'etc', 'postgresql', ver, inst.herd.base_name
         )
 
         sync = 'rsync -a --rsh=ssh postgres@%s:%s %s'
@@ -321,8 +322,12 @@ class PGUtility():
 
         # Once the process is complete, attempt to start the instance. Again,
         # this could fail and we'd go back to our caller with an exception.
+        # We should also pause temporarily to allow the replica to "catch up"
+        # before returning control to our caller, which may try to query
+        # the instance while it's still restoring.
 
         self.start()
+        time.sleep(10)
 
 
     def promote(self):
@@ -341,7 +346,7 @@ class PGUtility():
         ver = '.'.join(inst.version.split('.')[:2])
 
         self.__run_cmd(
-            'pg_ctlcluster %s %s promote' % (ver, inst.herd.herd_name)
+            'pg_ctlcluster %s %s promote' % (ver, inst.herd.base_name)
         )
 
         inst.master = None
@@ -440,7 +445,7 @@ class PGUtility():
 
         info = 'user=%s host=%s port=%s application_name=%s' % (
             'replication', inst.master.server.hostname, inst.herd.db_port,
-            inst.herd.herd_name + '_' + inst.server.hostname
+            inst.herd.base_name + '_' + inst.server.hostname
         )
 
         rec_file.write("standby_mode = 'on'\n")
