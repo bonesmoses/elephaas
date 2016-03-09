@@ -14,7 +14,7 @@
             return;
 
         current = $(this).find(':selected').text();
-        env = current.substr(current.search('-') + 2);
+        env = current.substr(current.lastIndexOf('-') + 2);
 
         matches = serverOpts.filter(function () {
             return $(this).text().indexOf(' - ' + env) != -1;
