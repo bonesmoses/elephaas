@@ -22,6 +22,10 @@ class DRAdmin(HAASAdmin):
     can_delete = False
 
 
+    def has_add_permission(self, request):
+        return False
+
+
     def get_actions(self, request):
         """
         Remove Unused Actions From Master Class

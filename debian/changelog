@@ -1,6 +1,9 @@
 elephaas (0.9.0-1) unstable; urgency=low
 
   * For SYS-29903, added base_name representation for OS use.
+  * Tweaked interface to remove potentially confusing elements.
+  * Added additional filters and searching to the herd menu.
+  * Added searching to the herd menu.
 
  -- Shaun Thomas <sthomas@optionshouse.com>  Wed, 09 Mar 2016 11:13:43 -0600
 
