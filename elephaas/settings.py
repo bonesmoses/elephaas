@@ -108,43 +108,10 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
-# LDAP-specific settings. Set DN and PASSWORD in local_settings.py.
-
-AUTH_LDAP_BIND_DN = ''
-AUTH_LDAP_BIND_PASSWORD = ''
-
-AUTH_LDAP_SERVER_URI = "ldap://chicagodc.peak6.net"
-AUTH_LDAP_REQUIRE_GROUP = "cn=Infrastructure,OU=Shared Services,OU=Distribution Groups,OU=Groups,DC=peak6,DC=net"
-
-AUTH_LDAP_CONNECTION_OPTIONS = {
-    ldap.OPT_REFERRALS: False,
-    ldap.OPT_X_TLS_DEMAND: True,
-    ldap.OPT_X_TLS_REQUIRE_CERT: ldap.OPT_X_TLS_NEVER
-}
-
-AUTH_LDAP_CACHE_GROUPS = True
-AUTH_LDAP_GROUP_CACHE_TIMEOUT = 300
-
-AUTH_LDAP_START_TLS = True
-
-AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=Technology,ou=Shared Services,ou=User Accounts,dc=peak6,dc=net",
-    ldap.SCOPE_SUBTREE, '(uid=%(user)s)')
-
-AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-    "is_active": AUTH_LDAP_REQUIRE_GROUP,
-    "is_staff": AUTH_LDAP_REQUIRE_GROUP,
-    "is_superuser": AUTH_LDAP_REQUIRE_GROUP
-}
-
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch("ou=groups,dc=peak6,dc=net",
-    ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)"
-)
-AUTH_LDAP_GROUP_TYPE = GroupOfNamesType(name_attr='cn')
-
 # There are some settings that should not be saved to source control. Those
 # settings are in the local settings file, and this application will not run
 # without them. These are things like database connection settings, secret
-# keys, and LDAP authentication.
+# keys, and LDAP authentication. See local_settings.example.py for more.
 
 try:
   from local_settings import *
