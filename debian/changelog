@@ -1,3 +1,9 @@
+elephaas (1.0.0-1) unstable; urgency=low
+
+  * Cleaned up for public release.
+
+ -- Shaun M. Thomas <sthomas@peak6.com>  Wed, 18 May 2016 08:25:38 -0500
+
 elephaas (0.9.0-1) unstable; urgency=low
 
   * For SYS-29903, added base_name representation for OS use.
@@ -5,26 +11,26 @@ elephaas (0.9.0-1) unstable; urgency=low
   * Added additional filters and searching to the herd menu.
   * Added searching to the herd menu.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Wed, 09 Mar 2016 11:13:43 -0600
+ -- Shaun M. Thomas <sthomas@peak6.com>  Wed, 09 Mar 2016 11:13:43 -0600
 
 elephaas (0.8.0-1) unstable; urgency=low
 
   * For SYS-29771, added missing help menus.
   * For SYS-29774, added configuration file sync.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 03 Mar 2016 10:04:32 -0600
+ -- Shaun M. Thomas <sthomas@peak6.com>  Thu, 03 Mar 2016 10:04:32 -0600
 
 elephaas (0.7.0-1) unstable; urgency=low
 
   * New revision for Herd As A Service design.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 01 Mar 2016 14:02:12 -0600
+ -- Shaun M. Thomas <sthomas@peak6.com>  Tue, 01 Mar 2016 14:02:12 -0600
 
 elephaas (0.6.0-1) unstable; urgency=low
 
   * Revise rsync to work in two parts to prevent xlog cycling during sync.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 03 Dec 2015 16:32:12 -0600
+ -- Shaun M. Thomas <sthomas@peak6.com>  Thu, 03 Dec 2015 16:32:12 -0600
 
 elephaas (0.5.0-1) unstable; urgency=low
 
@@ -32,14 +38,14 @@ elephaas (0.5.0-1) unstable; urgency=low
   * Added new function to get slave sync delay.
   * Fixed a bug that broke ability to delete instance entries.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Mon, 23 Nov 2015 15:07:43 -0600
+ -- Shaun M. Thomas <sthomas@peak6.com>  Mon, 23 Nov 2015 15:07:43 -0600
 
 elephaas (0.4.0-1) unstable; urgency=low
 
   * Removed "Auth" menu as LDAP supercedes it.
   * Sped up rsync operation slightly.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Wed, 18 Nov 2015 10:39:43 -0600
+ -- Shaun M. Thomas <sthomas@peak6.com>  Wed, 18 Nov 2015 10:39:43 -0600
 
 elephaas (0.3.0-1) unstable; urgency=low
 
@@ -49,29 +55,29 @@ elephaas (0.3.0-1) unstable; urgency=low
   * Added version as sidebar filter.
   * Added online indicator to replica menu.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 11 Aug 2015 11:29:14 -0500
+ -- Shaun M. Thomas <sthomas@peak6.com>  Tue, 11 Aug 2015 11:29:14 -0500
 
 elephaas (0.2.1-1) unstable; urgency=low
 
   * Fixed broken admin searching.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 28 Jul 2015 11:20:27 -0500
+ -- Shaun M. Thomas <sthomas@peak6.com>  Tue, 28 Jul 2015 11:20:27 -0500
 
 elephaas (0.2.0-1) unstable; urgency=low
 
   * New admin menu for disaster recovery pairs.
   * Code overhaul to centralize instance management.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Thu, 23 Jul 2015 14:17:57 -0500
+ -- Shaun M. Thomas <sthomas@peak6.com>  Thu, 23 Jul 2015 14:17:57 -0500
 
 elephaas (0.1.1-1) unstable; urgency=low
 
   * New admin menu for replicas.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Tue, 21 Jul 2015 11:47:20 -0500
+ -- Shaun M. Thomas <sthomas@peak6.com>  Tue, 21 Jul 2015 11:47:20 -0500
 
 elephaas (0.1.0-1) unstable; urgency=low
 
   * Initial release.
 
- -- Shaun Thomas <sthomas@optionshouse.com>  Mon, 06 Jul 2015 15:24:49 -0500
+ -- Shaun M. Thomas <sthomas@peak6.com>  Mon, 06 Jul 2015 15:24:49 -0500

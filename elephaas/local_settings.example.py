@@ -1,8 +1,8 @@
 
 SECRET_KEY = ''
+PUBLIC_KEY = 'SSH-based public key hash'
 
 DEBUG = True
-TEMPLATE_DEBUG = True
 
 DATABASES = {
     'default': {
@@ -17,10 +17,21 @@ DATABASES = {
 }
 
 # This is an example of LDAP auth for a corporate installation.
-# Uncomment this and customize to activate. It might be a good
-# idea to have an LDAP expert handy.
+# Uncomment this and customize to activate. Also uncomment the LDAP auth
+# method in settings.py to enable the module.
+# It might be a good idea to have an LDAP expert handy.
 
 """
+import ldap
+import logging
+
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+
+ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+
 AUTH_LDAP_BIND_DN = 'ldap_user'
 AUTH_LDAP_BIND_PASSWORD = 'ldap_password'
 

@@ -74,6 +74,7 @@ class PGUtility():
         :param command: Full command to execute remotely.
 
         :raise: Exception output obtained from STDERR, if any.
+        :return: String output from the command, if any.
         """
 
         return execute_remote_cmd(self.instance.server.hostname, command)
@@ -418,6 +419,30 @@ class PGUtility():
         ).annotate(sub_count=Count('master_id')).order_by('-sub_count')[0]
 
         return master
+
+
+    def get_version(self):
+        """
+        Get the version of an instance, or detect it if currently unknown.
+
+        Several functions rely on the Postgres version of the instance.
+        This function will detect the version from the PG_VERSION file in
+        the PGDATA root directory.
+
+        :return: The version of Postgres this instance is running.
+        """
+
+        inst = self.instance
+
+        if not inst.version:
+            usedir = inst.local_pgdata or inst.herd.pgdata
+            ver_file = os.path.join(usedir, 'PG_VERSION')
+
+            inst.version = self.__run_cmd(
+                'cat %s' % (ver_file,)
+            ).strip()
+
+        return inst.version
 
 
     def update_stream_config(self):

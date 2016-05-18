@@ -55,13 +55,13 @@ class InstanceAdmin(HAASAdmin):
 
         Since we're defining what is (hopefully) an existing structure,
         we should be able to auto-detect several elements from the database
-        itself. There is also a backend monitor on each server that will
+        itself. There can also a backend monitor on each server that will
         keep these values updated, but bootstrapping is always best.
 
         Autodetected fields:
           * is_online
+          * master
           * version
-          * xlog_pos
         """
 
         # First, check the online status. We want this to be as fresh as
@@ -75,12 +75,6 @@ class InstanceAdmin(HAASAdmin):
         if check == 0:
             obj.is_online = True
 
-        # If this instance has a master, we can inherit the Postgres
-        # version from it.
-
-        if obj.master:
-            obj.version = obj.master.version
-
         # Then, since herds are organized such that each herd follows a single
         # primary node, we can auto-declare that this is a replica or not.
         # If we search and find a primary for this herd, that instance will
@@ -89,7 +83,7 @@ class InstanceAdmin(HAASAdmin):
         try:
             util = PGUtility(obj)
             obj.master = util.get_herd_primary()
-            obj.version = primary.version
+            obj.version = util.get_version()
         except:
             pass
 

@@ -2,3 +2,5 @@
 * Add Herd Name filter to Herd menu.
 * Revise remote psql/ssh commands to be a bit more robust.
 * Remove dependency on Debian-style pg_ctlcluster tooling.
+* Make OS user a configurable.
+* Write RedHat .spec file.
