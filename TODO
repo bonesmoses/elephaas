@@ -4,3 +4,5 @@
 * Remove dependency on Debian-style pg_ctlcluster tooling.
 * Make OS user a configurable.
 * Write RedHat .spec file.
+* Add more documentation. Sphinx?
+* Add option to "bootstrap" a new, empty instance.
