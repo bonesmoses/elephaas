@@ -6,3 +6,4 @@
 * Write RedHat .spec file.
 * Add more documentation. Sphinx?
 * Add option to "bootstrap" a new, empty instance.
+* Add a systemd service file.
