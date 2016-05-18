@@ -7,4 +7,4 @@ eggs/
 sdist/
 *.egg-info/
 *.egg
-
+local_settings.py
