@@ -139,5 +139,5 @@ ElepHaaS also assumes the `postgres` OS user has read/write access to all remote
 
 Though these elements are listed in the `TODO` file, they are currently important limitations of ElepHaaS and should be listed upfront. Please keep this in mind when trying to utilize its functionality.
 
-Some menus also list an 'MB Lag' column. This is a calculated value based on the contents of the `xlog_pos` column in the `ele_instance` table. Maintaining the contents of this column is currently left as an exercise for the user. However, we do have a companion monitor for ElepHaaS that auto-detects server instances, running state, and several relevant values like `xlog_pos`, and regularly reports it back to the main ElepHaaS server. This is a supporting application that runs on the host servers themselves and communicates asynchronously with ElepHaaS, and needs to be installed separately.
+Some menus also list an 'MB Lag' column. This is a calculated value based on the contents of the `xlog_pos` column in the `ele_instance` table. To keep these values up to date without relying on an ad-hoc reporting system, please install [ele_tools](https://github.com/peak6/ele_tools) on managed Postgres systems. It will autodetect instances and report online status as well as `xlog_pos` and other information so ElepHaaS always has an accurate picture of instance status.
 

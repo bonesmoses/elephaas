@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                 ('instance_id', models.AutoField(primary_key=True, serialize=False)),
                 ('version', models.CharField(blank=True, editable=False, max_length=10, verbose_name=b'PG Version')),
                 ('local_pgdata', models.CharField(blank=True, help_text=b'Full path to root data directory if different from herd default. May be necessary for legacy systems.', max_length=100, verbose_name=b'Data Root Override')),
-                ('xlog_pos', models.IntegerField(editable=False, null=True, verbose_name=b'Current XLOG Position')),
+                ('xlog_pos', models.BigIntegerField(editable=False, null=True, verbose_name=b'Current XLOG Position')),
                 ('is_online', models.BooleanField(default=False, editable=False, verbose_name=b'Online')),
                 ('created_dt', models.DateField(editable=False)),
                 ('modified_dt', models.DateField(editable=False)),

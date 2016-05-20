@@ -134,7 +134,7 @@ class Instance(models.Model):
         help_text='Full path to root data directory if different from herd' +
             ' default. May be necessary for legacy systems.'
     )
-    xlog_pos = models.IntegerField('Current XLOG Position',
+    xlog_pos = models.BigIntegerField('Current XLOG Position',
         editable=False,
         null=True
     )
