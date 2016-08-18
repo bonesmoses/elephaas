@@ -46,8 +46,8 @@ class Herd(models.Model):
     )
     base_name = models.CharField('Instance',
         max_length=40,
-        help_text='Used to identify this herd, and for CLI tools like' +
-            ' pg_ctlcluster and the underlying OS.'
+        help_text='Used to identify this herd, and for CLI tools' +
+            ' called within the underlying OS.'
     )
     herd_name = models.CharField('Herd Name',
         max_length=40,

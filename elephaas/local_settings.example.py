@@ -4,6 +4,14 @@ PUBLIC_KEY = 'SSH-based public key hash'
 
 DEBUG = True
 
+COMMANDS = {
+    'base': 'pg_ctlcluster {version[0]}.{version[1]} {inst.herd.base_name}',
+    'start': '{COMMANDS[base]} start',
+    'stop': '{COMMANDS[base]} stop -m fast',
+    'reload': '{COMMANDS[base]} reload',
+    'promote': '{COMMANDS[base]} promote',
+}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',

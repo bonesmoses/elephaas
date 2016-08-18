@@ -6,6 +6,8 @@ import time
 
 from haas.models import Instance
 from django.db.models import Count
+from django.conf import settings
+
 
 __all__ = ['execute_remote_cmd', 'PGUtility']
 
@@ -64,6 +66,48 @@ class PGUtility():
         self.instance = instance
 
 
+    def __get_cmd(self, cmd_name):
+        """
+        Fetch a defined command string from the ElepHaaS config
+
+        Any commands defined in the COMMANDS configuration variable can be
+        fetched with this method. These commands may utilize any one of
+        several injected variables:
+
+        * inst: The current instance. Any drill-down is available.
+        * version: An array of all version parts, split by '.'.
+        * pgdata: The pgdata of the current instance, or herd if no
+              local pgdata was set.
+        * COMMANDS: The COMMANDS dict itself, in case the user defined
+              their own macros.
+
+        :param cmd_name: Name of the configured command to retrieve
+
+        :return: String output of the command, if any, or an empty string.
+        """
+
+        full_cmd = ''
+
+        if cmd_name in settings.COMMANDS:
+            full_cmd = settings.COMMANDS[cmd_name]
+
+        inst = self.instance
+
+        # Start by injecting any defined macros so they're unrolled before
+        # we replace actual variables. Then it's safe to format the instance
+        # pgdata, and other provided variables.
+
+        full_cmd = full_cmd.format(COMMANDS = settings.COMMANDS)
+
+        full_cmd = full_cmd.format(
+            inst = inst,
+            pgdata = (inst.local_pgdata or inst.herd.pgdata),
+            version = inst.version.split('.')
+        )
+
+        return full_cmd
+
+
     def __run_cmd(self, command):
         """
         Execute a command on this instance's host via SSH
@@ -113,18 +157,12 @@ class PGUtility():
         inst = self.instance
 
         if not inst.is_online:
-            if inst.version:
-                ver = '.'.join(inst.version.split('.')[:2])
-            else:
-                ver = '.'.join(inst.master.version.split('.')[:2])
 
             # If the metadata isn't up to date and this instance *is* online,
             # we don't want to error out. Just act like it worked.
 
             try:
-                self.__run_cmd(
-                    'pg_ctlcluster %s %s start' % (ver, inst.herd.base_name)
-                )
+                self.__run_cmd(self.__get_cmd('start'))
             except Exception, e:
                 if not 'already running' in str(e):
                     raise
@@ -159,9 +197,15 @@ class PGUtility():
             self.__run_cmd(
                 'psql -p %d -c "%s" postgres' % (port, query)
             )
+
         except Exception, e:
+            # If we can't enter backup mode, that's clearly a problem.
             if not 'not connect' in str(e) and not 'NOTICE:' in str(e):
                 raise
+
+            # If we're already in backup mode, this is not a fatal error.
+            elif 'already in progress' in str(e):
+                pass
 
 
     def stop(self):
@@ -173,15 +217,12 @@ class PGUtility():
         inst = self.instance
 
         if inst.is_online:
-            ver = '.'.join(inst.version.split('.')[:2])
 
             # If the metadata isn't up to date and this instance *is not*
             # online, we don't want to error out. Just act like it worked.
 
             try:
-                self.__run_cmd(
-                    'pg_ctlcluster %s %s stop -m fast' % (ver, inst.herd.base_name)
-                )
+                self.__run_cmd(self.__get_cmd('stop'))
             except Exception, e:
                 if not 'not running' in str(e) and not 'not exist' in str(e):
                     raise
@@ -235,10 +276,7 @@ class PGUtility():
         if not inst.is_online:
             return
 
-        ver = '.'.join(inst.version.split('.')[:2])
-        self.__run_cmd(
-            'pg_ctlcluster %s %s reload' % (ver, inst.herd.base_name)
-        )
+        self.__run_cmd(self.__get_cmd('reload'))
 
 
     def master_sync(self):
@@ -291,12 +329,26 @@ class PGUtility():
 
         master.stop_backup()
 
+        # Post sync, we need a new recovery.conf file. There's also a chance 
+        # the sync is due to an upstream upgrade, in which case the new
+        # datafiles will not match the version of the current instance. So
+        # we should copy the version from our primary before continuing.
+        # This includes our own instance so methods get correct info.
+
         self.update_stream_config()
+        inst.version = master.version
+        inst.save()
+
+        self.instance = inst
 
         # Include config files. The server might not be in configuration
-        # management yet, but still needs them to run.
+        # management yet, but still needs them to run. This is a hack to
+        # fix Debian-based systems because they separate config files
+        # from the pgdata directory. An easy way to "fix" this is to
+        # symlink the actual config files into the pgdata directory so
+        # they're included in the data dir sync.
 
-        ver = '.'.join(inst.version.split('.')[:2])
+        ver = '.'.join(inst.master.version.split('.')[:2])
         conf_dir = os.path.join(
             os.sep, 'etc', 'postgresql', ver, inst.herd.base_name
         )
@@ -328,6 +380,7 @@ class PGUtility():
         # the instance while it's still restoring.
 
         self.start()
+
         time.sleep(10)
 
 
@@ -344,11 +397,8 @@ class PGUtility():
         """
 
         inst = self.instance
-        ver = '.'.join(inst.version.split('.')[:2])
 
-        self.__run_cmd(
-            'pg_ctlcluster %s %s promote' % (ver, inst.herd.base_name)
-        )
+        self.__run_cmd(self.__get_cmd('promote'))
 
         inst.master = None
         inst.save()
@@ -413,12 +463,16 @@ class PGUtility():
 
         inst = self.instance
 
-        master = Instance.objects.exclude(pk = inst.pk).filter(
-            herd_id = inst.herd_id,
-            master_id__isnull = True
-        ).annotate(sub_count=Count('master_id')).order_by('-sub_count')[0]
+        try:
+            masters = Instance.objects.exclude(pk = inst.pk).filter(
+                herd_id = inst.herd_id,
+                master_id__isnull = True
+            ).annotate(sub_count=Count('master_id')).order_by('-sub_count')
+            
+            return masters[0]
 
-        return master
+        except IndexError:
+            return None
 
 
     def get_version(self):

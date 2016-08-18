@@ -1,9 +1,6 @@
 * Add replica rebuild option in DR pair menu.
 * Add Herd Name filter to Herd menu.
 * Revise remote psql/ssh commands to be a bit more robust.
-* Remove dependency on Debian-style pg_ctlcluster tooling.
-  - Possibly with pg_ctl direct calls?
-  - Replace with a custom pg_ctlcluster-like wrapper?
 * Make OS user a configurable.
 * Write RedHat .spec file.
 * Add more documentation. Sphinx?

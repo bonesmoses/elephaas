@@ -133,9 +133,7 @@ If the `/admin` path is omitted, the browser will be redirected to the expected 
 Notes
 =====
 
-ElepHaaS was designed on an Ubuntu system and currently relies on `pg_ctlcluster` to actually manage remote Postgres instances. There is a `TODO` item to remove this dependency, ideally by using `pg_ctl` instead. However, several OSs hide this tool in a location that is not in the standard `PATH`, complicating the process.
-
-ElepHaaS also assumes the `postgres` OS user has read/write access to all remote instances. All SSH commands on remote systems will use this user as well. This means the `~/.ssh/authorized_keys` file and all associated files should reside within the home of the `postgres` user as well. There is a TODO item to make this configurable.
+ElepHaaS assumes the `postgres` OS user has read/write access to all remote instances. All SSH commands on remote systems will use this user as well. This means the `~/.ssh/authorized_keys` file and all associated files should reside within the home of the `postgres` user as well. There is a TODO item to make this configurable.
 
 Though these elements are listed in the `TODO` file, they are currently important limitations of ElepHaaS and should be listed upfront. Please keep this in mind when trying to utilize its functionality.
 

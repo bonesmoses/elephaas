@@ -80,12 +80,9 @@ class InstanceAdmin(HAASAdmin):
         # If we search and find a primary for this herd, that instance will
         # become our master.
 
-        try:
-            util = PGUtility(obj)
-            obj.master = util.get_herd_primary()
-            obj.version = util.get_version()
-        except:
-            pass
+        util = PGUtility(obj)
+        obj.master = util.get_herd_primary()
+        obj.version = util.get_version()
 
         # Finally, save now that we've hijacked everything.
 
@@ -95,10 +92,6 @@ class InstanceAdmin(HAASAdmin):
     def start_instances(self, request, queryset):
         """
         Start all transmitted PostgreSQL instances
-
-        This function assumes we're running against a bunch of Debian-based
-        systems so we can use pg_ctlcluster. Thus far, that's the case. Later
-        revisions may change that assumption.
 
         Skip already running services.
         """
@@ -126,10 +119,6 @@ class InstanceAdmin(HAASAdmin):
     def stop_instances(self, request, queryset):
         """
         Stop all transmitted PostgreSQL instances
-
-        This function assumes we're running against a bunch of Debian-based
-        systems so we can use pg_ctlcluster. Thus far, that's the case. Later
-        revisions may change that assumption.
 
         Skip already stopped services.
         """
