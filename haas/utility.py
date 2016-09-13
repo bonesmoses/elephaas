@@ -336,7 +336,7 @@ class PGUtility():
         # This includes our own instance so methods get correct info.
 
         self.update_stream_config()
-        inst.version = master.version
+        inst.version = master.instance.version
         inst.save()
 
         self.instance = inst
