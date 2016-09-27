@@ -11,6 +11,29 @@ from haas.admin.base import HAASAdmin
 __all__ = ['InstanceAdmin']
 
 
+class PrimaryInstanceFilter(admin.SimpleListFilter):
+    """
+    Custom filter for only showing Primary/Replicas.
+    """
+
+    title = 'Role'
+    parameter_name = 'role'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', 'Primary'),
+            ('0', 'Replica'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == '1':
+            queryset = queryset.filter(master_id__isnull = False)
+        elif self.value() == '0':
+            queryset = queryset.filter(master_id__isnull = True)
+
+        return queryset
+
+
 class InstanceAdmin(HAASAdmin):
     actions = ['start_instances', 'stop_instances', 'restart_instances',
         'reload_instances', 'promote_instances', 'demote_instances',
@@ -20,7 +43,9 @@ class InstanceAdmin(HAASAdmin):
     list_display = ('herd', 'get_server', 'get_port', 'version', 
         'is_primary', 'is_online', 'mb_lag'
     )
-    list_filter = ('herd', 'herd__environment', 'is_online', 'version')
+    list_filter = ('herd', 'herd__environment', 'is_online',
+        PrimaryInstanceFilter, 'version'
+    )
     search_fields = ('herd__herd_name', 'server__hostname', 'version')
     readonly_fields = ('master', 'version',)
 
@@ -31,22 +56,26 @@ class InstanceAdmin(HAASAdmin):
             masterpos = instance.master.xlog_pos or 0
             return round(abs(masterpos - mypos) / 1024.0 / 1024.0, 2)
     mb_lag.short_description = 'MB Lag'
+    mb_lag.admin_order_field = 'xlog_pos'
 
 
     def is_primary(self, instance):
         return False if instance.master else True
     is_primary.short_description = 'Primary'
     is_primary.boolean = True
+    is_primary.admin_order_field = 'master'
 
 
     def get_server(self, instance):
         return str(instance.server.hostname)
     get_server.short_description = 'Container'
+    get_server.admin_order_field = 'server__hostname'
 
 
     def get_port(self, instance):
         return str(instance.herd.db_port)
     get_port.short_description = 'DB Port'
+    get_port.admin_order_field = 'herd__db_port'
 
 
     def save_model(self, request, obj, form, change):

@@ -31,6 +31,7 @@ class ServerAdmin(HAASAdmin):
     exclude = ('created_dt', 'modified_dt')
     list_display = ('hostname', 'environment')
     list_filter = ('environment',)
+    search_fields = ('hostname', )
     form = ServerForm
 
 admin.site.register(Server, ServerAdmin)

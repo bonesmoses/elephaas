@@ -17,6 +17,8 @@ __all__ = ['DRAdmin']
 class DRAdmin(HAASAdmin):
     actions = ['failover_pair',]
     list_display = ('herd', 'container', 'mb_lag', 'vhost')
+    list_filter = ('herd__environment',)
+    search_fields = ('herd__herd_name', 'server__hostname', 'vhost')
 
     list_display_links = None
     can_delete = False
@@ -46,6 +48,7 @@ class DRAdmin(HAASAdmin):
     def container(self, instance):
         return instance.server.hostname
     container.short_description = 'DR Container'
+    container.admin_order_field = 'server__hostname'
 
 
     def failover_pair(self, request, queryset):
