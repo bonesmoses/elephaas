@@ -175,17 +175,17 @@ class DisasterRecovery(models.Model):
 
     instance = models.OneToOneField('Instance',
         on_delete = models.DO_NOTHING,
-        primary_key=True
+        primary_key=True,
+        related_name = '%(class)s_instance'
     )
     herd = models.ForeignKey('Herd', on_delete = models.DO_NOTHING)
     server = models.ForeignKey('Server', on_delete = models.DO_NOTHING)
     mb_lag = models.DecimalField('Sync Delay (MB)',
         max_digits=5, decimal_places=2, null=True
     )
-    master = models.ForeignKey('self',
+    master = models.ForeignKey('Instance',
         on_delete = models.DO_NOTHING,
-        null=True,
-        blank=True
+        related_name = '%(class)s_master'
     )
     vhost = models.CharField('Virtual Host',
         max_length=40,

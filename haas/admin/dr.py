@@ -9,13 +9,13 @@ from django.contrib import admin, messages
 from django.shortcuts import render
 
 from haas.models import DisasterRecovery, Instance
-from haas.admin.base import HAASAdmin
+from haas.admin.base import HAASAdmin, SharedInstanceAdmin
 from haas.utility import PGUtility
 
 __all__ = ['DRAdmin']
 
-class DRAdmin(HAASAdmin):
-    actions = ['failover_pair',]
+class DRAdmin(SharedInstanceAdmin):
+    actions = ['failover_pair', 'rebuild_instances']
     list_display = ('herd', 'container', 'mb_lag', 'vhost')
     list_filter = ('herd__environment',)
     search_fields = ('herd__herd_name', 'server__hostname', 'vhost')
@@ -163,4 +163,6 @@ class DRAdmin(HAASAdmin):
 
     failover_pair.short_description = "Fail Over to Listed Replica"
 
+
 admin.site.register(DisasterRecovery, DRAdmin)
+

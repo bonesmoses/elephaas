@@ -1,8 +1,9 @@
 * Add replica rebuild option in DR pair menu.
-* Add Herd Name filter to Herd menu.
-* Revise remote psql/ssh commands to be a bit more robust.
+* Add option to "bootstrap" a new, empty instance.
+* Convert "slow" actions to asynchronous (django-rq/Celery+AJAX?) commands + polling.
+* Add ability to cancel long-running commands.
+* Add ability to run arbitrary SQL on selected herds.
 * Make OS user a configurable.
 * Write RedHat .spec file.
 * Add more documentation. Sphinx?
-* Add option to "bootstrap" a new, empty instance.
 * Add a systemd service file.

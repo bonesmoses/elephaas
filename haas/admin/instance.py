@@ -5,10 +5,10 @@ import psycopg2
 import socket
 
 from haas.models import Instance
-from haas.utility import execute_remote_cmd, PGUtility
-from haas.admin.base import HAASAdmin
+from haas.utility import PGUtility
+from haas.admin.base import HAASAdmin, SharedInstanceAdmin
 
-__all__ = ['InstanceAdmin']
+__all__ = ['InstanceAdmin',]
 
 
 class PrimaryInstanceFilter(admin.SimpleListFilter):
@@ -34,7 +34,7 @@ class PrimaryInstanceFilter(admin.SimpleListFilter):
         return queryset
 
 
-class InstanceAdmin(HAASAdmin):
+class InstanceAdmin(SharedInstanceAdmin):
     actions = ['start_instances', 'stop_instances', 'restart_instances',
         'reload_instances', 'promote_instances', 'demote_instances',
         'rebuild_instances',
@@ -170,44 +170,6 @@ class InstanceAdmin(HAASAdmin):
             self.message_user(request, "%s stopped!" % inst)
 
     stop_instances.short_description = "Stop Selected Instances"
-
-
-    def rebuild_instances(self, request, queryset):
-        """
-        Rebuild all transmitted PostgreSQL replication instances from master
-        """
-
-        # If we should be rebuilding an instance, connect to the host,
-        # ensure the instance is stopped, and sync the data directories
-        # through rsync + ssh.
-
-        if request.POST.get('post') == 'yes':
-
-            for inst_id in request.POST.getlist(admin.ACTION_CHECKBOX_NAME):
-                inst = Instance.objects.get(pk=inst_id)
-
-                try:
-                    util = PGUtility(inst)
-                    util.master_sync()
-
-                except Exception, e:
-                    self.message_user(request, "%s : %s" % (e, inst), messages.ERROR)
-                    continue
-
-                self.message_user(request, "%s rebuilt!" % inst)
-            return
-
-        # Now go to the confirmation form. It's very basic, and only serves
-        # to disrupt the process and avoid accidental rebuilds.
-
-        return render(request, 'admin/haas/instance/rebuild.html', 
-                {'queryset' : queryset,
-                 'opts': self.model._meta,
-                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                }
-        )
-
-    rebuild_instances.short_description = "Rebuild Selected Replicas"
 
 
     def promote_instances(self, request, queryset):
@@ -383,9 +345,6 @@ class InstanceAdmin(HAASAdmin):
 
     reload_instances.short_description = "Reload Selected Instances"
 
+
 admin.site.register(Instance, InstanceAdmin)
-
-
-
-
 
