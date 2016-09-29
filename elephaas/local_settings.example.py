@@ -10,6 +10,7 @@ COMMANDS = {
     'stop': '{COMMANDS[base]} stop -m fast',
     'reload': '{COMMANDS[base]} reload',
     'promote': '{COMMANDS[base]} promote',
+    'init': 'pg_createcluster {version[0]}.{version[1]} {inst.herd.base_name} -D {pgdata} -p {inst.herd.db_port}',
 }
 
 DATABASES = {

@@ -125,7 +125,7 @@ class Instance(models.Model):
     herd = models.ForeignKey('Herd', on_delete = models.CASCADE)
     server = models.ForeignKey('Server', on_delete = models.CASCADE)
     version = models.CharField('PG Version',
-        editable=False,
+        #editable=False,
         max_length=10,
         blank=True)
     local_pgdata = models.CharField('Data Root Override',

@@ -1,5 +1,3 @@
-* Add replica rebuild option in DR pair menu.
-* Add option to "bootstrap" a new, empty instance.
 * Convert "slow" actions to asynchronous (django-rq/Celery+AJAX?) commands + polling.
 * Add ability to cancel long-running commands.
 * Add ability to run arbitrary SQL on selected herds.

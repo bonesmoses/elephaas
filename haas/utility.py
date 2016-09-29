@@ -97,7 +97,10 @@ class PGUtility():
         # we replace actual variables. Then it's safe to format the instance
         # pgdata, and other provided variables.
 
-        full_cmd = full_cmd.format(COMMANDS = settings.COMMANDS)
+        try:
+            full_cmd = full_cmd.format(COMMANDS = settings.COMMANDS)
+        except KeyError:
+            pass
 
         full_cmd = full_cmd.format(
             inst = inst,
@@ -531,3 +534,55 @@ class PGUtility():
         rec_file.write("primary_conninfo = '%s'\n" % info)
         self.receive_file(rec_file.name, rec_path)
         rec_file.close()
+
+
+    def init_missing(self):
+        """
+        If this instance is missing, attempt to create it.
+
+        When this method is called, we check for the existence of this
+        instance on its declared server. If it's not found, we can do
+        one of two things:
+
+        * Create a new replica if a master is defined.
+        * Otherwise, bootstrap a brand new instance from scratch.
+
+        :raises: Exception in case of instance init failure.
+        """
+
+        # Start by trying to find the 'base' directory that is commonly
+        # found in an active instance. If we find it *do not run*! We use
+        # test to obtain a non-zero exit on failure, which should give
+        # us an exception from the command execution subroutine.
+
+        inst = self.instance
+        pgdata = inst.local_pgdata or inst.herd.pgdata
+
+        try:
+            self.__run_cmd(
+                'test -d %s' % (os.path.join(pgdata, 'base'),)
+            )
+            return
+        except:
+            pass
+
+        # There is a lot of scaffolding code in place already. We just need
+        # to act as a switch to invoke whichever appropriate command is
+        # necessary to bootstrap the new instances.
+
+        if inst.master:
+            self.master_sync()
+        else:
+            try:
+                self.__run_cmd(self.__get_cmd('init'))
+            except Exception, e:
+
+                # If this is a Debian/Ubuntu system, there's a bug when a port
+                # is defined that causes error output we need to ignore.
+                if 'uninitialized value' in str(e):
+                    pass
+
+        # Last but not least, start the instance. Admins can configure from
+        # this point, but the instance has been newly allocated as promised.
+
+        self.start()

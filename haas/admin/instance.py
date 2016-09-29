@@ -47,7 +47,7 @@ class InstanceAdmin(SharedInstanceAdmin):
         PrimaryInstanceFilter, 'version'
     )
     search_fields = ('herd__herd_name', 'server__hostname', 'version')
-    readonly_fields = ('master', 'version',)
+    readonly_fields = ('master',)
 
 
     def mb_lag(self, instance):
@@ -76,6 +76,16 @@ class InstanceAdmin(SharedInstanceAdmin):
         return str(instance.herd.db_port)
     get_port.short_description = 'DB Port'
     get_port.admin_order_field = 'herd__db_port'
+
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(InstanceAdmin, self).get_form(request, obj, **kwargs)
+
+        form.base_fields['version'].help_text = """
+            Version is commonly autodetected from existing instances.
+            Only set this to bootstrap a new instance.
+        """
+        return form
 
 
     def save_model(self, request, obj, form, change):
@@ -113,9 +123,20 @@ class InstanceAdmin(SharedInstanceAdmin):
         obj.master = util.get_herd_primary()
         obj.version = util.get_version()
 
-        # Finally, save now that we've hijacked everything.
+        # Save now that we've hijacked everything.
 
         obj.save()
+
+        # Attempt to initialize the instance. This only works if the instance
+        # doesn't already exist. It's also optional, so don't derail the save
+        # just because it didn't fully work.
+
+        try:
+            util.init_missing()
+        except Exception, e:
+            self.message_user(request, "Instance init: %s" % str(e),
+                messages.WARNING
+            )
 
 
     def start_instances(self, request, queryset):
