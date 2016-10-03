@@ -130,6 +130,49 @@ http://host:8000/admin
 If the `/admin` path is omitted, the browser will be redirected to the expected location. However, if bookmarking the full admin path, use the post-redirect URL.
 
 
+Extended Configuration
+======================
+
+Several more settings are available in `elephaas/local_settings.py` that may require modification depending on server environment. Please refer to this section for further information.
+
+Commands
+--------
+
+Since ElepHaaS was written primarily within an Ubuntu distribution, some of the defaults remote administrative commands may not operate normally on other operating systems. To correct this, change the `COMMANDS` dictionary settings as described below.
+
+| Setting | Description |
+|---------|-------------|
+| base | Optional root command used as a template for all other commands. To use this in another command definition, use {COMMANDS[base]}. |
+| start | Command necessary to start a Postgres instance. By default, this uses `pg_ctlcluster` for Debian / Ubuntu systems. |
+| stop | Command necessary to stop a Postgres instance. By default, this uses `pg_ctlcluster` for Debian / Ubuntu systems. |
+| reload | Command necessary to reload a Postgres instance so it rereads configuration files. By default, this uses `pg_ctlcluster` for Debian / Ubuntu systems. |
+| promote | Command necessary to promote a Postgres instance to a fully online read/write state. By default, this uses `pg_ctlcluster` for Debian / Ubuntu systems. |
+| init | Command necessary to initialize a new Postgres instance. By default, this uses `pg_initcluster` for Debian / Ubuntu systems. |
+
+In addition to these dictionary definitions, there are also some variables available for use within the definitions themselves.
+
+| Value | Notes |
+|-------|-------|
+| pgdata | Full path to the primary data directory for a Postgres instance. Since this is defined for the herd or overridden within the instance itself, this value is the most specific of the two. If an instance override is provided, it will be used instead of the herd default. |
+| version | A multiple element array for the major, minor, and (potentially) bugfix elements of the Postgres instance version. In many cases, this value is obtained from `PG_VERSION` within the instance data directory. As such, it's safest to use only the first two elements: {version[0]}, and {version[1]}. |
+| inst | The instance object itself. Standard python dot notation can drill down the entire instance attribute tree. |
+
+Example
+-------
+
+In a system that intends to use `pg_ctl` and `pg_init` instead of Debian or Ubuntu wrappers, and has multiple Postgres versions installed, the `COMMANDS` dictionary might resemble something like this:
+
+```python
+COMMANDS = {
+    'base': '/usr/pgsql-{version[0]}.{version[1]}/bin/pg_ctl -D {pgdata}',
+    'start': '{COMMANDS[base]} start',
+    'stop': '{COMMANDS[base]} stop -m fast',
+    'reload': '{COMMANDS[base]} reload',
+    'promote': '{COMMANDS[base]} promote',
+    'init': '/usr/pgsql-{version[0]}.{version[1]}/bin/pg_init -D {pgdata} -p {inst.herd.db_port}',
+}
+```
+
 Notes
 =====
 
