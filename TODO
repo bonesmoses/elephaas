@@ -1,3 +1,4 @@
+* Add DNS refresh option to Herd, DR menus.
 * Convert "slow" actions to asynchronous (django-rq/Celery+AJAX?) commands + polling.
 * Add ability to cancel long-running commands.
 * Add ability to run arbitrary SQL on selected herds.

@@ -1,3 +1,11 @@
+elephaas (1.2.0-1) unstable; urgency=low
+
+  * For SYS-34020, added missing timeline switching in recovery.conf.
+  * For SYS-34023, added pg_rewind attempt before rsync on rebuild.
+  * Use vhosts instead of hostnames in recovery.conf.
+
+ -- Shaun M. Thomas <sthomas@peak6.com>  Tue, 13 Dec 2016 11:34:56 -0600
+
 elephaas (1.1.0-1) unstable; urgency=low
 
   * For SYS-32973, added bootstrap of "missing" instances.

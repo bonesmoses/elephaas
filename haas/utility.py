@@ -290,8 +290,11 @@ class PGUtility():
         a master it might be subscribed to. If this function is called, the
         caller wants us to replace the slave with the contents of the
         master, presumably because they are out of sync.
-        
-        We also put the upstream master in backup mode for safe "backup"
+
+        To make this as fast as possible, we will attempt pg_rewind *first*,
+        since that will preclude the need for rsync. If that fails, we will
+        revert to synchronizing the data directory from upstream. In that cas,
+        we also put the upstream master in backup mode for safe "backup"
         purposes. This ensures the replication stream is as fresh as possible
         since a checkpoint took place before the sync started.
 
@@ -308,29 +311,53 @@ class PGUtility():
         if inst.is_online:
             self.stop()
 
-        # Before starting the sync, we need to put the master into backup mode.
-
-        master = PGUtility(inst.master)
-
-        xlog_mask = os.path.join('pg_xlog', '*')
-
-        sync = 'rsync -K -a --rsh=ssh -W --delete'
-        sync += ' --exclude=recovery.conf'
-        sync += ' --exclude=%s'
-        sync += ' --exclude=postmaster.*'
-        sync += ' postgres@%s:%s %s'
-
         primary_dir = inst.master.local_pgdata or inst.herd.pgdata
         replica_dir = inst.local_pgdata or inst.herd.pgdata
 
-        master.start_backup()
+        # Attempt to perform a rewind. This will only work if wal_log_hints
+        # was enabled and the server recently diverged from replication stream
+        # or is an old primary we're reclaiming, *and* the instance was shut
+        # down cleanly. That's a lot of caveats, but if it works, we save a
+        # substantial amount of time and resources.
 
-        self.__run_cmd(sync % (
-            xlog_mask, inst.master.server.hostname, primary_dir, 
-            os.path.dirname(replica_dir)
-        ))
+        try:
+            rewind = "pg_rewind -D %s"
+            rewind += " --source-server='host=%s port=%s dbname=%s user=%s'"
 
-        master.stop_backup()
+            self.__run_cmd(rewind % (
+                replica_dir, inst.herd.vhost, inst.herd.db_port,
+                'postgres', 'replication'
+            ))
+
+        # If the rewind failed, revert to a standard rsync rebuild of the
+        # replica.
+
+        except:
+
+            raise Exception(res)
+
+            master = PGUtility(inst.master)
+
+            xlog_mask = os.path.join('pg_xlog', '*')
+
+            sync = 'rsync -K -a --rsh=ssh -W --delete'
+            sync += ' --exclude=recovery.conf'
+            sync += ' --exclude=%s'
+            sync += ' --exclude=postmaster.*'
+            sync += ' postgres@%s:%s %s'
+
+            # Put the master into backup mode before starting the sync. This
+            # triggers an implicit checkpoint so all dirty buffers are written
+            # before the sync starts.
+
+            master.start_backup()
+
+            self.__run_cmd(sync % (
+                xlog_mask, inst.master.server.hostname, primary_dir, 
+                os.path.dirname(replica_dir)
+            ))
+
+            master.stop_backup()
 
         # Post sync, we need a new recovery.conf file. There's also a chance 
         # the sync is due to an upstream upgrade, in which case the new
@@ -339,7 +366,7 @@ class PGUtility():
         # This includes our own instance so methods get correct info.
 
         self.update_stream_config()
-        inst.version = master.instance.version
+        inst.version = inst.master.version
         inst.save()
 
         self.instance = inst
@@ -526,11 +553,12 @@ class PGUtility():
         rec_path = os.path.join(usedir, 'recovery.conf')
 
         info = 'user=%s host=%s port=%s application_name=%s' % (
-            'replication', inst.master.server.hostname, inst.herd.db_port,
+            'replication', inst.herd.vhost, inst.herd.db_port,
             inst.herd.base_name + '_' + inst.server.hostname
         )
 
         rec_file.write("standby_mode = 'on'\n")
+        rec_file.write("recovery_target_timeline = 'latest'\n")
         rec_file.write("primary_conninfo = '%s'\n" % info)
         self.receive_file(rec_file.name, rec_path)
         rec_file.close()
