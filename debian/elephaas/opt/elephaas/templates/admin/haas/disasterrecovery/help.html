@@ -1,0 +1,28 @@
+{% extends "admin/haas/help.html" %}
+
+{% block content %}
+<h1>What is a Disaster Recovery Pair?</h1>
+
+<p>In the context of a Postgres Herd, there is no such thing as a simple pair of servers. Since a herd follows a leader, we use a ranking methodology to provide meaning to certain replicas. In this case, a "pair" can be seen as the herd leader (the primary instance representing the herd) and a replica with the following attributes:</p>
+
+<ul>
+    <li>A replica instance which is currently online.</li>
+    <li>The amount of synchronization lag is the least among all existing replicas.</li>
+</ul>
+
+<p>If multiple systems match these criteria, we simply use them in the order they were created. For herds that consist of two members, this is a classic DR pair, including all implications of that arrangement. For herds consisting of several followers, there are a few special considerations.</p>
+
+<h1>What Happens During Failover?</h1>
+
+<p>In the case a DR failover is invoked, this is the process used by the system to ensure the greatest uptime guarantee:</p>
+
+<ol>
+    <li>The system determines the highest ranking replica, identified as <b>alternate</b>.</li>
+    <li>The primary herd leader is stopped.</li>
+    <li>The <b>alternate</b> is promoted to herd leader.</li>
+    <li>All other existing herd members are modified to recognize <b>alternate</b> as the new leader. Configuration files are altered and reloaded to achieve this change.</li>
+    <li>The previous leader is subscribed as as a new follower to <b>alternate</b>, but is left in an offline state to prevent potential data loss.</li>
+</ol>
+
+<p>Since the old leader is left offline, it may be used as an emergency data source in case the failover encountered problems of some kind. When its container is ready for reactivation, there is a specific menu action designed to fully synchronize it with the new herd leader. Otherwise, it will be ignored.</p>
+{% endblock %}

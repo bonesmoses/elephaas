@@ -123,9 +123,6 @@ class InstanceAdmin(SharedInstanceAdmin):
         obj.master = util.get_herd_primary()
         obj.version = util.get_version()
 
-        if obj.master and not obj.version:
-            obj.version = obj.master.version
-
         # Save now that we've hijacked everything.
 
         obj.save()

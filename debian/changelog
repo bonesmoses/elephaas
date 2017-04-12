@@ -1,3 +1,9 @@
+elephaas (1.2.1-1) unstable; urgency=low
+
+  * Fixed bug that prevented instance bootstrapping.
+
+ -- Shaun M. Thomas <sthomas@peak6.com>  Tue, 13 Dec 2016 11:34:56 -0600
+
 elephaas (1.2.0-1) unstable; urgency=low
 
   * For SYS-34020, added missing timeline switching in recovery.conf.

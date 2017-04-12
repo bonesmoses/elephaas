@@ -334,6 +334,8 @@ class PGUtility():
 
         except:
 
+            raise Exception(res)
+
             master = PGUtility(inst.master)
 
             xlog_mask = os.path.join('pg_xlog', '*')
@@ -509,8 +511,7 @@ class PGUtility():
 
         Several functions rely on the Postgres version of the instance.
         This function will detect the version from the PG_VERSION file in
-        the PGDATA root directory. If the version file doesn't exist,
-        this instance hasn't been bootstrapped yet, so return the None.
+        the PGDATA root directory.
 
         :return: The version of Postgres this instance is running.
         """
@@ -521,12 +522,9 @@ class PGUtility():
             usedir = inst.local_pgdata or inst.herd.pgdata
             ver_file = os.path.join(usedir, 'PG_VERSION')
 
-            try:
-                inst.version = self.__run_cmd(
-                    'cat %s' % (ver_file,)
-                ).strip()
-            except:
-                inst.version = None
+            inst.version = self.__run_cmd(
+                'cat %s' % (ver_file,)
+            ).strip()
 
         return inst.version
 

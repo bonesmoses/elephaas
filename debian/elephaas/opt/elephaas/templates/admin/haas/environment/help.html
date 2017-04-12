@@ -1,0 +1,19 @@
+{% extends "admin/haas/help.html" %}
+
+{% block content %}
+<h1>What is a System Environment?</h1>
+
+<p>If we think of our database instances as members in a herd of elephants, an environment is simply where they live. Some herds have small habitats and never leave a single area, while others travel far and wide. In a database context, this translates to some herds operating within a single data center, while others will span several depending on operational needs.</p>
+
+<p>Servers then, are isolated habitats capable of hosting one or more herd members. These also exist <i>exclusively</i> within an environment, much like plots of land assigned to a territory. Yet multiple herds can reside within a single environment. This does not mean that each herd must exist on every server available, just that they can use any within the entire pool.</p>
+
+<h1>Example</h1>
+
+<p>We have ten production servers labeled <b>A-J</b>, and three herds: <b>trading</b>, <b>tools</b> and <b>execution</b>. We chose to create two environments to corral these herds:</p>
+
+<ul>
+    <li>Shared Prod: Servers A-H, hosting trading or tools as needed.</li>
+    <li>Big Prod: Servers I and J, larger servers set aside for things like the execution herd.</li>
+</ul>
+
+{% endblock %}
