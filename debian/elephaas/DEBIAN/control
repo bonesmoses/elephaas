@@ -1,9 +1,0 @@
-Package: elephaas
-Version: 1.2.0-1
-Architecture: all
-Maintainer: Shaun M. Thomas <sthomas@peak6.com>
-Installed-Size: 224
-Depends: python-django, python-psycopg2, python-paramiko, python-dnspython
-Section: python
-Priority: optional
-Description: ElepHaaS is a Postgres Herd as a Service administration tool. Configure, deploy, and replicate Postgres application clusters with ease.

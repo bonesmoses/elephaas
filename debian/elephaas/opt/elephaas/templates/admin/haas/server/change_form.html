@@ -1,9 +1,0 @@
-{% extends "admin/change_form.html" %}
-{% load i18n admin_urls admin_static admin_modify %}
-{% block introduction %}
-<p>Before registering this server, please ensure the following public SSH key to the <kbd><strong>.ssh/authorized_keys</strong></kbd> file for the <strong>postgres</strong> local user.</p>
-
-<input type="text" size="100" value="{{ PUBLIC_KEY }}" onClick="this.select();">
-
-<p>This will ensure that ElepHaaS can take control of the server and use it within the available pool.</p>
-{% endblock %}
